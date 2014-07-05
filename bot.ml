@@ -7,13 +7,11 @@
 (*   let server_uri = Ptype.uri_of_string "http://163.5.84.222/api/" in *)
 (*   Pumgrana.set_pumgrana_api_uri server_uri *)
 
-(* Pumgrana.insert_tags Ptype.Link ["Talk about";"Mentioned by"]  *)
-
-
 lwt _ =
-  let tags_uri =
-    [Ptype.uri_of_string "http://pumgrana.com/tag/link/Talk+about";
-     Ptype.uri_of_string "http://pumgrana.com/tag/link/Mentioned+by"] in
+  lwt tags_uri = Pumgrana.insert_tags Ptype.Link ["Talk about";"Mentioned by"]
+  in
+    (* [Ptype.uri_of_string "http://pumgrana.com/tag/link/Talk+about"; *)
+    (*  Ptype.uri_of_string "http://pumgrana.com/tag/link/Mentioned+by"] in *)
   let wiki_links_from_video all_wiki_links video =
     let (_,_,url,_,categories) = video in
     lwt all_wiki_links = all_wiki_links in
@@ -47,5 +45,5 @@ lwt _ =
   in
   lwt wiki_links = List.fold_left wiki_links_from_video (Lwt.return []) videos in
   List.iter print wiki_links;
-  Pumgrana.insert_links wiki_links;
+  lwt _ = Pumgrana.insert_links wiki_links in
   Lwt.return ()
