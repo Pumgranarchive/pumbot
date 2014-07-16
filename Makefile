@@ -4,7 +4,7 @@ ML :=		bot.ml
 
 MLI :=
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,str,yojson,ptools,pumgrana_api,bfy
+PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_api,bfy,dbpedia
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)
