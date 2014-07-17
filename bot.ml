@@ -74,11 +74,6 @@ let wiki_links_from_video video =
   lwt rel_wiki_links = Lwt_list.map_p get_links rel_topics in
   Lwt.return (List.concat (wiki_links@rel_wiki_links))
 
-let ids = List.map Youtube_http.get_video_id_from_url
-  (* ["https://www.youtube.com/watch?v=op-c3njOKz0"] *)
-  ["https://www.youtube.com/watch?v=DonHa4pySsM"]
-  (* ["https://www.youtube.com/watch?v=MZeh07V9vRo&list=TL7holR59tY4PTd7DruZVsGT7IzQ30N3A7"] *)
-
 let print_link (o, t, tags) =
   Printf.printf
     "o:%s\nt:%s\ntags:%s\n\n"
@@ -89,18 +84,20 @@ let print_link (o, t, tags) =
 let map_links func list =
   lwt_concat (Lwt_list.map_p func list)
 
-let create_wiki_links ids =
+let ids = List.map Youtube_http.get_video_id_from_url
+  (* ["https://www.youtube.com/watch?v=op-c3njOKz0"] *)
+  (* ["https://www.youtube.com/watch?v=DonHa4pySsM"] *)
+  (* ["https://www.youtube.com/watch?v=oiF4KesF9Ag"; *)
+  (*  "https://www.youtube.com/watch?v=7LJBF5_9-p4"; *)
+  (*  "https://www.youtube.com/watch?v=DaFu3AoDXPY"] *)
+  ["https://www.youtube.com/watch?v=j95HbhTl60k"]
+  (* ["https://www.youtube.com/watch?v=MZeh07V9vRo&list=TL7holR59tY4PTd7DruZVsGT7IzQ30N3A7"] *)
+
+let create_links = wiki_links_from_video (* discography_links_from_video *)
+
+lwt () =
   lwt videos = Youtube_http.get_videos_from_ids ids in
-  lwt links = map_links wiki_links_from_video videos in
+  lwt links = map_links create_links videos in
   List.iter print_link links;
   lwt _ = Pumgrana.insert_links links in
   Lwt.return ()
-
-let create_discography_links ids =
-  lwt videos = Youtube_http.get_videos_from_ids ids in
-  lwt links = map_links discography_links_from_video videos in
-  List.iter print_link links;
-  lwt _ = Pumgrana.insert_links links in
-  Lwt.return ()
-
-lwt () = create_discography_links ids
