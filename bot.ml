@@ -84,20 +84,16 @@ let print_link (o, t, tags) =
 let map_links func list =
   lwt_concat (Lwt_list.map_p func list)
 
-let ids = List.map Youtube_http.get_video_id_from_url
-  (* ["https://www.youtube.com/watch?v=op-c3njOKz0"] *)
-  (* ["https://www.youtube.com/watch?v=DonHa4pySsM"] *)
-  (* ["https://www.youtube.com/watch?v=oiF4KesF9Ag"; *)
-  (*  "https://www.youtube.com/watch?v=7LJBF5_9-p4"; *)
-  (*  "https://www.youtube.com/watch?v=DaFu3AoDXPY"] *)
-  ["https://www.youtube.com/watch?v=j95HbhTl60k"]
-  (* ["https://www.youtube.com/watch?v=MZeh07V9vRo&list=TL7holR59tY4PTd7DruZVsGT7IzQ30N3A7"] *)
+let create_links = (* wiki_links_from_video *) discography_links_from_video
 
-let create_links = wiki_links_from_video (* discography_links_from_video *)
-
-lwt () =
+let main () =
+  let ids = List.map Youtube_http.get_video_id_from_url
+    (List.tl (Array.to_list Sys.argv))
+  in
   lwt videos = Youtube_http.get_videos_from_ids ids in
   lwt links = map_links create_links videos in
   List.iter print_link links;
   lwt _ = Pumgrana.insert_links links in
   Lwt.return ()
+
+lwt () = main ()
