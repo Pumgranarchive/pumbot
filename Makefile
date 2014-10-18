@@ -1,6 +1,9 @@
 NAME :=		pum_bot
 
-ML :=		bot.ml
+ML :=		utils.ml	\
+		wiki.ml		\
+		discography.ml	\
+		bot.ml
 
 MLI :=
 
