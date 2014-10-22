@@ -1,9 +1,10 @@
 NAME :=		pum_bot
 
 ML :=		utils.ml	\
-		wiki.ml		\
-		discography.ml	\
-		bot.ml
+		dbpedia.ml	\
+		youtube.ml	\
+		readability.ml 	\
+		main.ml
 
 MLI :=
 
