@@ -10,7 +10,7 @@ let is_youtube_uri uri =
   with _ -> false
 
 let video_uri_of_song wiki_title (_, title, _) =
-  lwt videos = Youtube_http.search_video (wiki_title ^.^ title) 1 in
+  lwt videos = Youtube_http.search_video ~query:(wiki_title ^.^ title) 1 in
   let _, _, video_str_url, _, _ = List.hd videos in
   Lwt.return (Ptype.uri_of_string video_str_url)
 
@@ -20,6 +20,16 @@ let video_of_uri uri =
   lwt videos = Youtube_http.get_videos_from_ids [id] in
   Lwt.return (List.hd videos)
 
+
+(*
+**
+** get freebase informations from an URI.
+** apply "data_of_topic" on "topics" and "r_topics"
+** "data_of_topic" have to return "uris, subjects, links"
+** "subjects" and "links" will be assigned and inserted to the current content
+** "uris" will be returned for (possible) future usage
+**
+*)
 let wrapper data_of_topic uri =
   lwt id, title, str_url, summary, categories = video_of_uri uri in
   let topics, r_topics = categories in
@@ -35,6 +45,13 @@ let append_data previous_data new_data =
   let p_uris, p_subjects, p_links = previous_data in
   let n_uris, n_subjects, n_links = new_data in
   n_uris@p_uris, n_subjects@p_subjects, n_links@p_links
+
+
+(******************************************************************************
+******************************* Search By Topic  *****************************
+*******************************************************************************)
+let search_by_topic topic =
+  Youtube_http.search_video ~topic_id:topic 10
 
 (******************************************************************************
 ********************************** Wiki ***************************************
@@ -67,17 +84,18 @@ lwt same_band = Tag.Of_Link.make "Same Band"
 
 let discography uri =
   let data_of_topic p_data topic =
-    lwt wiki_data = Freebase_http.get_topics topic in
-    let _,wiki_title,_,_,_,wiki_str_urls = wiki_data in
-    lwt songs = Dbpedia_http.get_discography wiki_title in
-    lwt video_uris = Lwt_list.map_p (video_uri_of_song wiki_title) songs in
+    lwt freebase_data = Freebase_http.get_topics topic in
+    let _,freebase_title,_,_,_,freebase_str_urls = freebase_data in
+    lwt songs = Dbpedia_http.get_discography freebase_title in
+    lwt video_uris = Lwt_list.map_p (video_uri_of_song freebase_title) songs in
     let v_uris = uri::video_uris in
     let video_links = Link.build_each_on_all [same_band] v_uris in
     let tags = [made_by], [made] in
-    let new_data = build_wiki_data v_uris tags p_data wiki_data in
+    let new_data = build_wiki_data v_uris tags p_data freebase_data in
     Lwt.return (append_data new_data (video_uris, [], video_links))
   in
   wrapper data_of_topic uri
+
 
 (******************************************************************************
 ********************************** Switch *************************************
