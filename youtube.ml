@@ -16,19 +16,9 @@ let video_of_uri uri =
   lwt videos = Youtube_http.get_videos_from_ids [id] in
   Lwt.return (List.hd videos)
 
-
-lwt talk_about = Tag.Of_Link.make "Talk about"
-lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
-
-let wiki uri =
+let wrapper data_of_topic uri =
   lwt id, title, str_url, summary, categories = video_of_uri uri in
   let topics, r_topics = categories in
-  let data_of_topic (p_uris, p_subjects, p_links) topic =
-    lwt _,wiki_title,_,_,_,wiki_urls = Freebase_http.get_topics topic in
-    let wuris = List.map Ptype.uri_of_string wiki_urls in
-    let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] wuris in
-    Lwt.return (wuris@p_uris, wiki_title::p_subjects, links@p_links)
-  in
   let empty = ([], [], []) in
   lwt t_uris, t_subjects, t_links =
       Lwt_list.fold_left data_of_topic empty topics
@@ -41,14 +31,26 @@ let wiki uri =
   lwt _ = Link.insert (t_links@rt_links) in
   Lwt.return (t_uris@rt_uris)
 
+lwt talk_about = Tag.Of_Link.make "Talk about"
+lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
+
+let wiki uri =
+  let data_of_topic (p_uris, p_subjects, p_links) topic =
+    lwt _,wiki_title,_,_,_,wiki_urls = Freebase_http.get_topics topic in
+    let wuris = List.map Ptype.uri_of_string wiki_urls in
+    let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] wuris in
+    Lwt.return (wuris@p_uris,
+                wiki_title::p_subjects,
+                links@p_links)
+  in
+  wrapper data_of_topic uri
+
 
 lwt made_by = Tag.Of_Link.make "Made by"
 lwt made = Tag.Of_Link.make "Made"
 lwt same_band = Tag.Of_Link.make "Same Band"
 
 let discography uri =
-  lwt id, title, str_url, summary, categories = video_of_uri uri in
-  let topics, r_topics = categories in
   let data_of_topic (p_uris, p_subjects, p_links) topic =
     lwt _,wiki_title,_,_,_,wiki_str_urls = Freebase_http.get_topics topic in
     let wiki_uris = List.map Ptype.uri_of_string wiki_str_urls in
@@ -61,17 +63,7 @@ let discography uri =
                 wiki_title::p_subjects,
                 video_links@wiki_links@p_links)
   in
-  let empty = ([], [], []) in
-  lwt t_uris, t_subjects, t_links =
-      Lwt_list.fold_left data_of_topic empty topics
-  in
-  lwt rt_uris, rt_subjects, rt_links =
-      Lwt_list.fold_left data_of_topic empty r_topics
-  in
-  lwt tag_ids = Tag.Of_Content.makes (t_subjects@rt_subjects) in
-  lwt () = Tag.Of_Content.assign tag_ids uri in
-  lwt _ = Link.insert (t_links@rt_links) in
-  Lwt.return (t_uris@rt_uris)
+  wrapper data_of_topic uri
 
 let switch uri =
   print_endline "Youtube";
