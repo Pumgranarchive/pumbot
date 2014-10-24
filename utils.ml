@@ -59,6 +59,9 @@ struct
     in
     aux initial list
 
+  let dep_fold_left func initial dep_list =
+    fold_left (fold_left func) initial dep_list
+
 end
 
 module Lwt_magic_queue =

@@ -20,16 +20,13 @@ let wrapper data_of_topic uri =
   lwt id, title, str_url, summary, categories = video_of_uri uri in
   let topics, r_topics = categories in
   let empty = ([], [], []) in
-  lwt t_uris, t_subjects, t_links =
-      Lwt_list.fold_left data_of_topic empty topics
+  lwt uris, subjects, links =
+      Lwt_list.dep_fold_left data_of_topic empty [topics;r_topics]
   in
-  lwt rt_uris, rt_subjects, rt_links =
-      Lwt_list.fold_left data_of_topic empty r_topics
-  in
-  lwt tag_ids = Tag.Of_Content.makes (t_subjects@rt_subjects) in
+  lwt tag_ids = Tag.Of_Content.makes subjects in
   lwt () = Tag.Of_Content.assign tag_ids uri in
-  lwt _ = Link.insert (t_links@rt_links) in
-  Lwt.return (t_uris@rt_uris)
+  lwt _ = Link.insert links in
+  Lwt.return uris
 
 lwt talk_about = Tag.Of_Link.make "Talk about"
 lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
