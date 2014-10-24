@@ -90,8 +90,12 @@ struct
   struct
     let make subject =
       Lwt_list.hd (Pumgrana.insert_tags Ptype.Content [subject])
+
     let makes subjects =
       Pumgrana.insert_tags Ptype.Content subjects
+
+    let assign tags_id content_uri =
+      Pumgrana.update_content_tags content_uri tags_id
   end
 
 end
@@ -134,6 +138,9 @@ struct
     in
     List.fold_left dep1 [] list
 
+  let insert links =
+    let () = print links in
+    Pumgrana.insert_links links
 
 end
 
