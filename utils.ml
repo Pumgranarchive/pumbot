@@ -114,6 +114,27 @@ struct
   let map func list =
     Lwt_list.concat (Lwt_list.map_p func list)
 
+  let build_inter_link t1 t2 l1 l2 =
+    let dep2 e1 build e2 =
+      (e1, e2, t1)::((e2, e1, t2)::build)
+    in
+    let dep1 build e1 =
+      List.fold_left (dep2 e1) build l2
+    in
+    List.fold_left dep1 [] l1
+
+  let build_each_on_all tag list =
+    let dep2 e1 build e2 =
+      if Ptype.compare_uri e1 e2 = 0
+      then build
+      else (e1, e2, tag)::build
+    in
+    let dep1 build e1 =
+      List.fold_left (dep2 e1) build list
+    in
+    List.fold_left dep1 [] list
+
+
 end
 
 let (^.^) a b = a ^ " " ^ b
