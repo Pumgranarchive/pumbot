@@ -4,6 +4,7 @@ ML :=		utils.ml	\
 		dbpedia.ml	\
 		youtube.ml	\
 		readability.ml 	\
+		argParser.ml	\
 		main.ml
 
 MLI :=
