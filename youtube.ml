@@ -20,6 +20,7 @@ let video_of_uri uri =
   lwt videos = Youtube_http.get_videos_from_ids [id] in
   Lwt.return (List.hd videos)
 
+lwt youtube_tag = Tag.Of_Content.make "Youtube"
 
 (*
 **
@@ -37,7 +38,7 @@ let wrapper data_of_topic uri =
   lwt data = Lwt_list.dep_fold_left data_of_topic empty [topics;r_topics] in
   let uris, subjects, links = data in
   lwt tag_ids = Tag.Of_Content.makes subjects in
-  lwt () = Tag.Of_Content.assign tag_ids uri in
+  lwt () = Tag.Of_Content.assign (youtube_tag::tag_ids) uri in
   lwt _ = Link.insert links in
   Lwt.return uris
 
