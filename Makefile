@@ -9,7 +9,7 @@ ML :=		utils.ml	\
 
 MLI :=
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_api,bfy,dbpedia
+PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_http,bfy,dbpedia
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)

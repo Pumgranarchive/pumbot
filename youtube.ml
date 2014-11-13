@@ -10,7 +10,7 @@ let is_youtube_uri uri =
   with _ -> false
 
 let video_uri_of_song wiki_title (_, title, _) =
-  lwt videos = Youtube_http.search_video (wiki_title ^.^ title) 1 in
+  lwt videos = Youtube_http.search_video ~query:(wiki_title ^.^ title) 1 in
   let _, _, video_str_url, _, _ = List.hd videos in
   Lwt.return (Ptype.uri_of_string video_str_url)
 

@@ -84,21 +84,21 @@ struct
   module Of_Link =
   struct
     let make subject =
-      Lwt_list.hd (Pumgrana.insert_tags Ptype.Link [subject])
+      Lwt_list.hd (Pumgrana_http.insert_tags Ptype.Link [subject])
     let makes subjects =
-      Pumgrana.insert_tags Ptype.Link subjects
+      Pumgrana_http.insert_tags Ptype.Link subjects
   end
 
   module Of_Content =
   struct
     let make subject =
-      Lwt_list.hd (Pumgrana.insert_tags Ptype.Content [subject])
+      Lwt_list.hd (Pumgrana_http.insert_tags Ptype.Content [subject])
 
     let makes subjects =
-      Pumgrana.insert_tags Ptype.Content subjects
+      Pumgrana_http.insert_tags Ptype.Content subjects
 
     let assign tags_id content_uri =
-      Pumgrana.update_content_tags content_uri tags_id
+      Pumgrana_http.update_content_tags content_uri tags_id
   end
 
 end
@@ -143,7 +143,7 @@ struct
 
   let insert links =
     let () = print links in
-    Pumgrana.insert_links links
+    Pumgrana_http.insert_links links
 
 end
 
