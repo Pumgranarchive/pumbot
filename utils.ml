@@ -68,10 +68,16 @@ module Lwt_magic_queue =
 struct
 
   let fold_left func init queue =
+    let print e h =
+      print_endline ((Ptype.string_of_uri h) ^ " : " ^ (Printexc.to_string e))
+    in
     let rec aux data = function
       | []   -> Lwt.return data
       | h::q ->
-        lwt d', q' = func data q h in
+        lwt d', q' =
+          try_lwt func data q h
+          with e -> (print e h; Lwt.return (data, q))
+        in
         aux d' q'
     in
     aux init queue
