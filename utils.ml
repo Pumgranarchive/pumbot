@@ -14,6 +14,15 @@ struct
   let concat_d3 lists =
     concat (concat (concat lists))
 
+  let limit size l =
+    let rec aux bl s = function
+      | []   -> bl
+      | h::t ->
+        if s >= size then bl else
+          aux (h::bl) (s + 1) t
+    in
+    List.rev (aux [] 0 l)
+
 end
 
 module Magic_queue =
@@ -54,8 +63,8 @@ struct
     let rec aux data = function
       | []   -> Lwt.return data
       | h::t ->
-        lwt data' = func data h in
-        aux data' t
+          lwt data' = func data h in
+          aux data' t
     in
     aux initial list
 
@@ -67,20 +76,21 @@ end
 module Lwt_magic_queue =
 struct
 
-  let fold_left func init queue =
+  let fold_left func limit init queue =
     let print e h =
       print_endline ((Ptype.string_of_uri h) ^ " : " ^ (Printexc.to_string e))
     in
-    let rec aux data = function
+    let rec aux data i = function
+      | _ when limit >= 0 && i >= limit -> Lwt.return data
       | []   -> Lwt.return data
       | h::q ->
         lwt d', q' =
           try_lwt func data q h
           with e -> (print e h; Lwt.return (data, q))
         in
-        aux d' q'
+        aux d' (i + 1) q'
     in
-    aux init queue
+    aux init 0 queue
 
 end
 

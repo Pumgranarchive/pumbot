@@ -36,7 +36,7 @@ let iter switch options uris =
     Lwt.return (old', queue')
   in
   let queue = Magic_queue.from_list uris in
-  lwt old = Lwt_magic_queue.fold_left aux [] queue in
+  lwt old = Lwt_magic_queue.fold_left aux options.iteration_max [] queue in
   Lwt.return ()
 
 let run list options =
