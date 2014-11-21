@@ -63,7 +63,7 @@ let get_contained_uris body =
   in
   let str_uris = extract_uri [] 0 in
   let uris = List.rev (List.map Ptype.uri_of_string str_uris) in
-  List.limit 20 uris
+  List.limit 40 uris
 
 let get_body uri =
   lwt json = Readability_http.get_parser uri in
