@@ -31,7 +31,8 @@ let push_new_uris options list queue old =
   then List.fold_left (push old) queue list
   else queue
 
-let regeps = Str.regexps ["film"; "actor"; "actress"; "author"; "director"]
+let regeps = Str.regexps ["film"; "actor"; "actress"; "author"; "director";
+                          "producer"; "tv show"; "film-maker"]
 
 let is_authorized_tag tag_uri =
   let str = Ptype.string_of_uri tag_uri in
