@@ -1,15 +1,15 @@
 NAME :=		pum_bot
 
 ML :=		utils.ml	\
+		readability.ml 	\
 		dbpedia.ml	\
 		youtube.ml	\
-		readability.ml 	\
 		argParser.ml	\
 		main.ml
 
 MLI :=
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_http,bfy,dbpedia
+PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,opencalais_http
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)

@@ -1,10 +1,21 @@
 open Utils
 
-let is_wikipedia_uri uri =
-  Dbpedia_http.is_wikipedia_uri (Ptype.string_of_uri uri)
+module Yojson = Yojson.Basic
+
+(******************************************************************************
+********************************** Utils **************************************
+*******************************************************************************)
 
 lwt wikipedia_tag = Tag.Of_Content.make "Wikipedia"
-let () = print_endline (Ptype.string_of_uri wikipedia_tag)
+lwt talk_about = Tag.Of_Link.make "Talk about"
+lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
+
+(******************************************************************************
+********************************* Getters *************************************
+*******************************************************************************)
+
+let is_wikipedia_uri uri =
+  Dbpedia_http.is_wikipedia_uri (Ptype.string_of_uri uri)
 
 let get uri =
   print_endline "Dbpedia";
@@ -13,9 +24,12 @@ let get uri =
   lwt data = Lwt_list.hd (Dbpedia_http.get_basic_informations_by_uri str_uri) in
   let format_subject subject =
     let subject = Str.replace_first (Str.regexp "^.*:") "" subject in
-    Str.global_replace (Str.regexp "[_\.]") " " subject
+    Str.global_replace (Str.regexp "[_\\.]") " " subject
   in
   let subjects = List.map format_subject data.subject in
   lwt tag_ids = Tag.Of_Content.makes subjects in
-  lwt () = Tag.Of_Content.assign (wikipedia_tag::tag_ids) uri in
-  Lwt.return []
+  let tags = wikipedia_tag::tag_ids in
+  lwt body = Readability.get_body uri in
+  let wuris = Readability.get_contained_uris body in
+  let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] wuris in
+  Lwt.return (tags, links, wuris)

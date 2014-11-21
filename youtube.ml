@@ -38,9 +38,8 @@ let wrapper data_of_topic uri =
   lwt data = Lwt_list.dep_fold_left data_of_topic empty [topics;r_topics] in
   let uris, subjects, links = data in
   lwt tag_ids = Tag.Of_Content.makes subjects in
-  lwt () = Tag.Of_Content.assign (youtube_tag::tag_ids) uri in
-  lwt _ = Link.insert links in
-  Lwt.return uris
+  let tags = youtube_tag::tag_ids in
+  Lwt.return (tags, links, uris)
 
 let append_data previous_data new_data =
   let p_uris, p_subjects, p_links = previous_data in
