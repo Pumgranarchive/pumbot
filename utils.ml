@@ -1,3 +1,19 @@
+module Str =
+struct
+
+  include Str
+
+  let regexps = List.map Str.regexp
+
+  let contains regexp str =
+    try ignore (Str.search_forward regexp str 0); true
+    with Not_found -> false
+
+  let exists regexps str =
+    List.exists (fun r -> contains r str) regexps
+
+end
+
 module List =
 struct
 
@@ -22,6 +38,14 @@ struct
           aux (h::bl) (s + 1) t
     in
     List.rev (aux [] 0 l)
+
+  let merge func l1 l2 =
+    let add list e =
+      if List.exists (func e) list
+      then list
+      else e::list
+    in
+    List.fold_left add l1 l2
 
 end
 
@@ -114,13 +138,30 @@ struct
       Pumgrana_http.insert_tags Ptype.Content subjects
 
     let assign tags_id content_uri =
+      Printf.printf "%d tags on %s\n" (List.length tags_id) (Ptype.string_of_uri content_uri);
+      List.iter (fun x -> print_endline (Ptype.string_of_uri x)) tags_id;
       Pumgrana_http.update_content_tags content_uri tags_id
   end
 
 end
 
+module Uri =
+struct
+
+  type t = Ptype.uri
+  let compare = Ptype.compare_uri
+
+end
+
 module Link =
 struct
+
+  type t = Ptype.link_id
+
+  let compare l1 l2 =
+    let s1 = Ptype.string_of_link_id l1 in
+    let s2 = Ptype.string_of_link_id l2 in
+    String.compare s1 s2
 
   let print links =
     let aux (o, t, tags) =
@@ -137,9 +178,18 @@ struct
   let map func list =
     Lwt_list.concat (Lwt_list.map_p func list)
 
+  let origin (origin, target, tags) = origin
+  let target (origin, target, tags) = target
+  let tags (origin, target, tags) = tags
+  let add_tags (origin, target, tags) new_tags =
+    (origin, target,
+     List.merge (fun t1 t2 -> Uri.compare t1 t2 = 0) tags new_tags)
+
   let build_inter_link t1 t2 l1 l2 =
     let dep2 e1 build e2 =
-      (e1, e2, t1)::((e2, e1, t2)::build)
+      if Ptype.compare_uri e1 e2 != 0
+      then (e1, e2, t1)::((e2, e1, t2)::build)
+      else build
     in
     let dep1 build e1 =
       List.fold_left (dep2 e1) build l2
@@ -148,9 +198,9 @@ struct
 
   let build_each_on_all tag list =
     let dep2 e1 build e2 =
-      if Ptype.compare_uri e1 e2 = 0
-      then build
-      else (e1, e2, tag)::build
+      if Ptype.compare_uri e1 e2 != 0
+      then (e1, e2, tag)::build
+      else build
     in
     let dep1 build e1 =
       List.fold_left (dep2 e1) build list
