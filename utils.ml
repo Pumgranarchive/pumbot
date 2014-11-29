@@ -1,3 +1,6 @@
+(* Initialize the random *)
+let _ = Random.self_init ()
+
 module Str =
 struct
 
@@ -164,12 +167,13 @@ struct
     String.compare s1 s2
 
   let print links =
-    let aux (o, t, tags) =
+    let aux (o, t, tags, score) =
       Printf.printf
-        "o:%s\nt:%s\ntags:%s\n\n"
+        "origin\t%s\ntarget\t%s\ntags\t%s\nscore\t%d\n\n"
         (Ptype.string_of_uri o)
         (Ptype.string_of_uri t)
         (Ptype.string_of_uri (List.hd tags))
+        score
     in
     print_endline "";
     List.iter aux links;
@@ -178,17 +182,22 @@ struct
   let map func list =
     Lwt_list.concat (Lwt_list.map_p func list)
 
-  let origin (origin, target, tags) = origin
-  let target (origin, target, tags) = target
-  let tags (origin, target, tags) = tags
-  let add_tags (origin, target, tags) new_tags =
+  let origin (origin, target, tags, score) = origin
+  let target (origin, target, tags, score) = target
+  let tags (origin, target, tags, score) = tags
+  let score (origin, target, tags, score) = score
+  let add_tags (origin, target, tags, score) new_tags =
     (origin, target,
-     List.merge (fun t1 t2 -> Uri.compare t1 t2 = 0) tags new_tags)
+     List.merge (fun t1 t2 -> Uri.compare t1 t2 = 0) tags new_tags,
+     score)
+  let change_score (origin, target, tags, score) new_score =
+    (origin, target, tags, new_score)
 
   let build_inter_link t1 t2 l1 l2 =
     let dep2 e1 build e2 =
+      let score = Random.int 100 in
       if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, t1)::((e2, e1, t2)::build)
+      then (e1, e2, t1, score)::((e2, e1, t2, score)::build)
       else build
     in
     let dep1 build e1 =
@@ -196,10 +205,11 @@ struct
     in
     List.fold_left dep1 [] l1
 
-  let build_each_on_all tag list =
+  let build_each_on_all tags list =
     let dep2 e1 build e2 =
+      let score = Random.int 100 in
       if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, tag)::build
+      then (e1, e2, tags, score)::build
       else build
     in
     let dep1 build e1 =
@@ -209,7 +219,7 @@ struct
 
   let insert links =
     let () = print links in
-    Pumgrana_http.insert_links links
+    Pumgrana_http.insert_scored_links links
 
 end
 
