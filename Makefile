@@ -7,7 +7,10 @@ ML :=		utils.ml	\
 		argParser.ml	\
 		main.ml
 
-MLI :=
+MLI :=		argParser.mli	\
+		readability.mli	\
+		dbpedia.mli	\
+		youtube.mli
 
 PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,opencalais_http
 
@@ -16,7 +19,7 @@ CMO :=		$(ML:.ml=.cmo)
 CMI :=		$(MLI:.mli=.cmi)
 LIB :=		-package $(PACKAGES)
 SYNTAX :=	-syntax camlp4o -package lwt.syntax
-DOC_DOR :=	doc/html
+DOC_DIR :=	doc/html
 OCAMLFIND :=	ocamlfind
 OCAMLDOC :=	$(OCAMLFIND) ocamldoc $(SYNTAX) $(LIB) -intro doc/indexdoc -html -d $(DOC_DIR)
 OCAMLC :=	$(OCAMLFIND) ocamlc $(SYNTAX) $(LIB)

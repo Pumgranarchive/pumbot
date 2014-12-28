@@ -1,7 +1,10 @@
 {1 Pumbot documentation}
 
 {!modules:
-        Bot
+        ArgParser
+        Readability
+        Dbpedia
+        Youtube
 }
 
 {2 Index}

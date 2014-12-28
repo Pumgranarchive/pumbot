@@ -63,7 +63,7 @@ let get_contained_uris body =
   in
   let str_uris = extract_uri [] 0 in
   let uris = List.rev (List.map Ptype.uri_of_string str_uris) in
-  List.limit 20 uris
+  List.limit 40 uris
 
 let get_body uri =
   lwt json = Readability_http.get_parser uri in
@@ -79,7 +79,7 @@ let get_social_tags json =
     then
       let name = to_string (member "name" elm) in
       let name' = Str.global_replace (Str.regexp "[_\\.]") " " name in
-      name::blist
+      name'::blist
     else blist
   in
   let list = to_assoc json in
