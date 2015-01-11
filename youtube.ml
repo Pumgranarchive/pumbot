@@ -18,6 +18,7 @@ let video_uri_of_song wiki_title (_, title, _) =
 
 let search text =
   lwt videos = Youtube_http.search_video ~query:(text ^.^ "film") 10 in
+  Printf.printf "youtube %d (%s film)\n" (List.length videos) text;
   let videos_uri = List.map uri_of_video videos in
   Lwt.return videos_uri
 
