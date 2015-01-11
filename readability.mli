@@ -18,6 +18,10 @@ val get : Ptype.uri ->
     @return the getted body of the given [uri] *)
 val get_body : Ptype.uri -> string Lwt.t
 
+(** [get_data uri]
+    @return the getted title and body of the given [uri] *)
+val get_data : Ptype.uri -> (string * string) Lwt.t
+
 (** [get_contained_uris body]
     @return containted uris found in the given [body] *)
 val get_contained_uris : string -> Ptype.uri list

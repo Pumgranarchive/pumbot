@@ -30,9 +30,9 @@ let get uri =
     let subjects = List.map format_subject data.subject in
     lwt tag_ids = Tag.Of_Content.makes subjects in
     let tags = wikipedia_tag::tag_ids in
-    lwt body = Readability.get_body uri in
+    lwt title, body = Readability.get_data uri in
     let wuris = Readability.get_contained_uris body in
-    lwt yuris = Youtube.search data.title in
+    lwt yuris = Youtube.search title in
     let uris = yuris@wuris in
     let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] uris in
     Lwt.return (tags, links, uris)
