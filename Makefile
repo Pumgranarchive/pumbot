@@ -1,16 +1,16 @@
 NAME :=		pum_bot
 
 ML :=		utils.ml	\
+		youtube.ml	\
 		readability.ml 	\
 		dbpedia.ml	\
-		youtube.ml	\
 		argParser.ml	\
 		main.ml
 
 MLI :=		argParser.mli	\
+		youtube.mli	\
 		readability.mli	\
-		dbpedia.mli	\
-		youtube.mli
+		dbpedia.mli
 
 PACKAGES :=	lwt,cohttp,cohttp.lwt,rdf,rdf.lwt,str,yojson,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,opencalais_http
 

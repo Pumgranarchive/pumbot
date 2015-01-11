@@ -70,6 +70,13 @@ let get_body uri =
   let body = Yojson.Util.(to_string (member "content" json)) in
   Tidy.xhtml_of_html body
 
+let get_data uri =
+  lwt json = Readability_http.get_parser uri in
+  let title = Yojson.Util.(to_string (member "title" json)) in
+  let body = Yojson.Util.(to_string (member "content" json)) in
+  lwt body' = Tidy.xhtml_of_html body in
+  Lwt.return (title, body')
+
 let get_social_tags json =
   let open Yojson.Util in
   let aux blist (title, elm) =
@@ -96,8 +103,10 @@ let is_something_else uri = true
 
 let get uri =
   print_endline "Readability";
-  lwt body = get_body uri in
-  let uris = get_contained_uris body in
+  lwt title, body = get_data uri in
+  let buris = get_contained_uris body in
+  lwt yuris = Youtube.search title in
+  let uris = yuris@buris in
   lwt json = Opencalais_http.request ~display_body:false body in
   let subjects = get_social_tags json in
   lwt tag_ids = Tag.Of_Content.makes subjects in

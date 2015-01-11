@@ -4,6 +4,8 @@ open Utils
 ********************************** Utils **************************************
 *******************************************************************************)
 
+let uri_of_video (_, _, video_str_url, _, _) = Ptype.uri_of_string video_str_url
+
 let is_youtube_uri uri =
   let str_uri = Ptype.string_of_uri uri in
   try ignore (Youtube_http.get_video_id_from_url str_uri); true
@@ -13,6 +15,11 @@ let video_uri_of_song wiki_title (_, title, _) =
   lwt videos = Youtube_http.search_video ~query:(wiki_title ^.^ title) 1 in
   let _, _, video_str_url, _, _ = List.hd videos in
   Lwt.return (Ptype.uri_of_string video_str_url)
+
+let search text =
+  lwt videos = Youtube_http.search_video ~query:(text ^.^ "film") 10 in
+  let videos_uri = List.map uri_of_video videos in
+  Lwt.return videos_uri
 
 let video_of_uri uri =
   let url = Ptype.string_of_uri uri in

@@ -32,8 +32,10 @@ let get uri =
     let tags = wikipedia_tag::tag_ids in
     lwt body = Readability.get_body uri in
     let wuris = Readability.get_contained_uris body in
-    let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] wuris in
-    Lwt.return (tags, links, wuris)
+    lwt yuris = Youtube.search data.title in
+    let uris = yuris@wuris in
+    let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] uris in
+    Lwt.return (tags, links, uris)
   in
   try_lwt aux ()
   with _ -> Readability.get uri
