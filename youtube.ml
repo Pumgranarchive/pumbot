@@ -111,6 +111,6 @@ let discography uri =
 
 let switch uri =
   print_endline "Youtube";
-  lwt to_add = discography uri in
-  (* lwt to_add = wiki uri in *)
+  (* lwt to_add = discography uri in *)
+  lwt to_add = wiki uri in
   Lwt.return to_add
