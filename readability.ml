@@ -104,11 +104,13 @@ let is_something_else uri = true
 let get uri =
   print_endline "Readability";
   lwt title, body = get_data uri in
-  let buris = get_contained_uris body in
-  lwt yuris = Youtube.search title in
-  let uris = yuris@buris in
   lwt json = Opencalais_http.request ~display_body:false body in
   let subjects = get_social_tags json in
   lwt tag_ids = Tag.Of_Content.makes subjects in
-  let links = Link.build_inter_link [talk_about] [mentioned_by] [uri] uris in
-  Lwt.return (tag_ids, links, uris)
+  let buris = get_contained_uris body in
+  let rlinks = Link.build_inter_link [talk_about] [mentioned_by] [uri] buris in
+  lwt yuris = Youtube.search title in
+  let ylinks = Link.build_inter_link [talk_about] [mentioned_by] [uri] yuris in
+  Link.insert ylinks; (* Always insert youtube links  *)
+  let uris = yuris@buris in
+  Lwt.return (tag_ids, rlinks, uris)
