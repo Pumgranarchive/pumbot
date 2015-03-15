@@ -1,0 +1,12 @@
+{1 Pumbot documentation}
+
+{!modules:
+        ArgParser
+        Readability
+        Dbpedia
+        Youtube
+}
+
+{2 Index}
+
+{!indexlist}
