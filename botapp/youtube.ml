@@ -28,7 +28,7 @@ let video_of_uri uri =
   lwt videos = Youtube_http.get_videos_from_ids [id] in
   Lwt.return (List.hd videos)
 
-lwt youtube_tag = Tag.Of_Content.make "Youtube"
+let youtube_subject = "Youtube"
 
 (*
 **
@@ -44,10 +44,10 @@ let wrapper data_of_topic uri =
   let topics, r_topics = categories in
   let empty = ([], [], []) in
   lwt data = Lwt_list.dep_fold_left data_of_topic empty [topics;r_topics] in
-  let uris, subjects, links = data in
-  lwt tag_ids = Tag.Of_Content.makes subjects in
-  let tags = youtube_tag::tag_ids in
-  Lwt.return (tags, links, uris)
+  let uris, data_subjects, links = data in
+  let subjects = youtube_subject :: data_subjects in
+  let content = (uri, title, summary, subjects) in
+  Lwt.return (content, links, uris)
 
 let append_data previous_data new_data =
   let p_uris, p_subjects, p_links = previous_data in
@@ -65,8 +65,8 @@ let search_by_topic topic =
 ********************************** Wiki ***************************************
 *******************************************************************************)
 
-lwt talk_about = Tag.Of_Link.make "Talk about"
-lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
+let talk_about = "Talk about"
+let mentioned_by = "Mentioned by"
 
 let build_wiki_data uris (t1, t2) p_data wiki_data =
   let _,wiki_title,_,_,_,wiki_urls = wiki_data in
@@ -77,7 +77,7 @@ let build_wiki_data uris (t1, t2) p_data wiki_data =
 let wiki uri =
   let data_of_topic p_data topic =
     lwt wiki_data = Freebase_http.get_topics topic in
-    let tags = [talk_about], [mentioned_by] in
+    let tags = talk_about, mentioned_by in
     Lwt.return (build_wiki_data [uri] tags p_data wiki_data)
   in
   wrapper data_of_topic uri
@@ -86,9 +86,9 @@ let wiki uri =
 ******************************* Discography ***********************************
 *******************************************************************************)
 
-lwt made_by = Tag.Of_Link.make "Made by"
-lwt made = Tag.Of_Link.make "Made"
-lwt same_band = Tag.Of_Link.make "Same Band"
+let made_by = "Made by"
+let made = "Made"
+let same_band = "Same Band"
 
 let discography uri =
   let data_of_topic p_data topic =
@@ -97,8 +97,8 @@ let discography uri =
     lwt songs = Dbpedia_http.get_discography freebase_title in
     lwt video_uris = Lwt_list.map_p (video_uri_of_song freebase_title) songs in
     let v_uris = uri::video_uris in
-    let video_links = Link.build_each_on_all [same_band] v_uris in
-    let tags = [made_by], [made] in
+    let video_links = Link.build_each_on_all same_band v_uris in
+    let tags = made_by, made in
     let new_data = build_wiki_data v_uris tags p_data freebase_data in
     Lwt.return (append_data new_data (video_uris, [], video_links))
   in

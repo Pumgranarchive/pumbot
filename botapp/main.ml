@@ -20,63 +20,84 @@ let rec switch platforms uri =
 let not_equal a b = (Ptype.compare_uri a b != 0)
 let is_equal a b _ = (Ptype.compare_uri a b = 0)
 
+(**
+   Push new_uri into the queue
+   If it is not already contains into old list or the queue itself
+*)
 let push old queue uri =
-  if (not (UriMap.exists (is_equal uri) old) &&
+  if (UriMap.for_all (fun k v -> not_equal uri k) old &&
       Magic_queue.for_all (not_equal uri) queue)
   then Magic_queue.push uri queue
   else queue
 
-let push_new_uris options list queue old =
-  if not options.not_recursive
-  then List.fold_left (push old) queue list
+let push_new_uris options new_uris queue old =
+  if not options.not_recursive             (* If recursive mode is activated *)
+  then List.fold_left (push old) queue new_uris
   else queue
 
+(* Authorized subjects *)
 let regeps = Str.regexps ["film"; "actor"; "actress"; "author"; "director";
                           "producer"; "tv show"; "film-maker"]
 
-let is_authorized_tag tag_uri =
-  let str = Ptype.string_of_uri tag_uri in
-  Str.exists regeps str
+let is_authorized_subject subject = Str.exists regeps subject
 
-let insert_tags uri new_tags uris =
-  if List.exists is_authorized_tag new_tags
-  then Lwt.async (fun () -> Tag.Of_Content.assign new_tags uri);
-  UriMap.add uri new_tags uris
+let is_authorized content =
+  List.exists is_authorized_subject (Content.subjects content)
 
+(**
+   Insert the content if it contains at least one authorized subject
+   Then return new known uris list with the associated subjects
+*)
+let insert_content content uris =
+  let authorized = is_authorized content in
+  if authorized then Lwt.async (fun () -> Content.insert content);
+  UriMap.add (Content.uri content) authorized uris
+
+(**
+   - Add new links into the old links if they are not already inside
+   - Insert new links if the origin and target content is authorized
+
+   Then return new known links list
+*)
 let insert_links uri new_links links uris =
-  let add links link =
-    let link_id = Ptype.link_id (Link.origin link) (Link.target link) in
-    let link' =
-      try Link.add_tags (LinkMap.find link_id links) (Link.tags link)
-      with Not_found -> link
-    in
-    LinkMap.add link_id link' links
+  let add_if_not_exists links link =
+    let link_id = Link.id link in
+    if LinkMap.for_all (fun id link -> String.compare id link_id != 0) links
+    then LinkMap.add link_id link links
+    else links
   in
-  let build_insert_list link_id link link_list =
+  let filter_to_insert link_id link link_list =
     try
       let second_uri =
         if Uri.compare (Link.origin link) uri = 0 then Link.target link
         else if Uri.compare (Link.target link) uri = 0 then Link.origin link
         else raise Not_found
       in
-      let second_tags = UriMap.find second_uri uris in
-      if List.exists is_authorized_tag second_tags
-      then link::link_list
-      else link_list
+      let authorized = UriMap.find second_uri uris in
+      if authorized then link::link_list else link_list
     with Not_found -> link_list
   in
-  let links' = List.fold_left add links new_links in
-  let tags = UriMap.find uri uris in
-  let () = if (List.exists is_authorized_tag tags) then
-      let to_insert = LinkMap.fold build_insert_list links' [] in
+  let links' = List.fold_left add_if_not_exists links new_links in
+  let authorized = UriMap.find uri uris in
+  let () = if authorized then
+      let to_insert = LinkMap.fold filter_to_insert links' [] in
       Lwt.async (fun () -> Link.insert to_insert)
   in
   links'
 
+(**
+   Get information from content,
+   - Insert them
+   - Build new lists of known uris and links
+   - Add new uris to parse
+
+   Until there is no uri left in the queue to visit.
+   Or the limit of iterations
+*)
 let iter switch options uris =
   let aux (uris, links) queue uri =
-    lwt new_tags, new_links, new_uris = switch uri in
-    let uris' = insert_tags uri new_tags uris in
+    lwt content, new_links, new_uris = switch uri in
+    let uris' = insert_content content uris in
     let links' = insert_links uri new_links links uris' in
     let queue' = push_new_uris options new_uris queue uris' in
     Lwt.return ((uris', links'), queue')
@@ -91,8 +112,8 @@ let run (list, options) =
   iter (switch platforms) options uris
 
 let main () =
-  let ilist = List.tl (Array.to_list Sys.argv) in
-  try run (ArgParser.get_options ilist)
+  let input_list = List.tl (Array.to_list Sys.argv) in
+  try run (ArgParser.get_options input_list)
   with
   | ArgParser.Invalid_Argument
   | ArgParser.Help             -> Lwt.return ()

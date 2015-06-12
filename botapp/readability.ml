@@ -73,9 +73,10 @@ let get_body uri =
 let get_data uri =
   lwt json = Readability_http.get_parser uri in
   let title = Yojson.Util.(to_string (member "title" json)) in
+  let summary = Yojson.Util.(to_string (member "excerpt" json)) in
   let body = Yojson.Util.(to_string (member "content" json)) in
-  lwt body' = Tidy.xhtml_of_html body in
-  Lwt.return (title, body')
+  (* lwt body' = Tidy.xhtml_of_html body in *)
+  Lwt.return (title, summary, body)
 
 let get_social_tags json =
   let open Yojson.Util in
@@ -92,8 +93,8 @@ let get_social_tags json =
   let list = to_assoc json in
   List.fold_left aux [] list
 
-lwt talk_about = Tag.Of_Link.make "Talk about"
-lwt mentioned_by = Tag.Of_Link.make "Mentioned by"
+let talk_about = "Talk about"
+let mentioned_by = "Mentioned by"
 
 (******************************************************************************
 ******************************** Functions ************************************
@@ -103,14 +104,19 @@ let is_something_else uri = true
 
 let get uri =
   print_endline "Readability";
-  lwt title, body = get_data uri in
+
+  lwt title, summary, body = get_data uri in
   lwt json = Opencalais_http.request ~display_body:false body in
   let subjects = get_social_tags json in
-  lwt tag_ids = Tag.Of_Content.makes subjects in
+  let content = (uri, title, summary, subjects) in
+
   let buris = get_contained_uris body in
-  let rlinks = Link.build_inter_link [talk_about] [mentioned_by] [uri] buris in
+  let rlinks = Link.build_inter_link talk_about mentioned_by [uri] buris in
+
   lwt yuris = Youtube.search title in
-  let ylinks = Link.build_inter_link [talk_about] [mentioned_by] [uri] yuris in
-  Link.insert ylinks; (* Always insert youtube links  *)
+  let ylinks = Link.build_inter_link talk_about mentioned_by [uri] yuris in
+  let _ = Link.insert ylinks in (* Always insert youtube links  *)
+
   let uris = yuris@buris in
-  Lwt.return (tag_ids, rlinks, uris)
+
+  Lwt.return (content, rlinks, uris)
