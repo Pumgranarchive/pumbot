@@ -1,6 +1,10 @@
 (* Initialize the random *)
 let _ = Random.self_init ()
 
+(* Initialize the pumgrana api uri *)
+let pumgrana_api_uri = Ptype.uri_of_string "http://127.0.0.1:8081/"
+let () = Pumgrana_http.set_pumgrana_api_uri pumgrana_api_uri
+
 module Str =
 struct
 
@@ -129,34 +133,86 @@ struct
 
 end
 
-module Content =
+module Tag =
 struct
 
-  let uri (uri, title, summary, subjects) = uri
-  let title (uri, title, summary, subjects) = title
-  let summary (uri, title, summary, subjects) = summary
-  let subjects (uri, title, summary, subjects) = subjects
+  (* (subject * mark) *)
+  type t = (string * float)
 
-  let insert (uri, title, summary, subjects) =
-    Pumgrana_http.insert_content uri title summary subjects
+  let make subject =
+    let mark = Random.float 100. in
+    (subject, mark)
+
+  let makes subjects =
+    List.map make subjects
+
+  let subject (subject, mark) = subject
+
+  (* Authorized subjects *)
+  let regeps = Str.regexps ["film"; "actor"; "actress"; "author"; "director";
+                            "producer"; "tv show"; "film-maker"]
+
+  let is_authorized (subject, tag) = true (* Str.exists regeps subject *)
+
 
 end
 
-module Link =
+module Content =
+struct
+
+  (* (uri * title * summary * tag list) *)
+  type t = (Ptype.uri * string * string * Tag.t list)
+
+  let make uri title summary tags = (uri, title, summary, tags)
+
+  let uri (uri, title, summary, tags) = uri
+  let title (uri, title, summary, tags) = title
+  let summary (uri, title, summary, tags) = summary
+  let tags (uri, title, summary, tags) = tags
+  let subjects (uri, title, summary, tags) = List.map Tag.subject tags
+
+  let is_authorized (uri, title, summary, tags) =
+    List.exists Tag.is_authorized tags
+
+  let print (uri, title, summary, tags) =
+      Printf.printf
+        "uri\t%s\ntitle\t%s\nsummary\t%s\ntags\t%s\n\n"
+        (Ptype.string_of_uri uri)
+        title
+        summary
+        (Tag.subject (List.hd tags))
+
+  let insert (uri, title, summary, tags) =
+    print_endline "\nInsert Content ::";
+    print (uri, title, summary, tags);
+    Pumgrana_http.insert_content uri title summary tags
+
+end
+
+module LinkId =
 struct
 
   type t = string
 
   let compare = String.compare
 
+end
+
+
+module Link =
+struct
+
+  (* (origin * target * nature * mark) *)
+  type t = (Ptype.uri * Ptype.uri * string * float)
+
   let print links =
-    let aux (o, t, subject, score) =
+    let aux (o, t, nature, mark) =
       Printf.printf
-        "origin\t%s\ntarget\t%s\ntags\t%s\nscore\t%d\n\n"
+        "origin\t%s\ntarget\t%s\nnature\t%s\nmark\t%f\n\n"
         (Ptype.string_of_uri o)
         (Ptype.string_of_uri t)
-        subject
-        score
+        nature
+        mark
     in
     print_endline "";
     List.iter aux links;
@@ -165,20 +221,20 @@ struct
   let map func list =
     Lwt_list.concat (Lwt_list.map_p func list)
 
-  let origin (origin, target, nature, score) = origin
-  let target (origin, target, nature, score) = target
-  let id (origin, target, nature, score) =
+  let origin (origin, target, nature, mark) = origin
+  let target (origin, target, nature, mark) = target
+  let id (origin, target, nature, mark) =
     (Ptype.string_of_uri origin) ^ "@" ^
       (Ptype.string_of_uri target)
 
-  let nature (origin, target, nature, score) = nature
-  let score (origin, target, nature, score) = score
+  let nature (origin, target, nature, mark) = nature
+  let mark (origin, target, nature, mark) = mark
 
   let build_inter_link n1 n2 l1 l2 =
     let dep2 e1 build e2 =
-      let score = Random.int 100 in
+      let mark = Random.float 100. in
       if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, n1, score)::((e2, e1, n2, score)::build)
+      then (e1, e2, n1, mark)::((e2, e1, n2, mark)::build)
       else build
     in
     let dep1 build e1 =
@@ -188,9 +244,9 @@ struct
 
   let build_each_on_all nature list =
     let dep2 e1 build e2 =
-      let score = Random.int 100 in
+      let mark = Random.float 100. in
       if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, nature, score)::build
+      then (e1, e2, nature, mark)::build
       else build
     in
     let dep1 build e1 =

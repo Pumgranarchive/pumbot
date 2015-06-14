@@ -2,7 +2,7 @@ open Utils
 open ArgParser
 
 module UriMap = Map.Make(Uri)
-module LinkMap = Map.Make(Link)
+module LinkMap = Map.Make(LinkId)
 
 let platforms =
   [(Youtube.is_youtube_uri,         Youtube.switch);
@@ -35,21 +35,14 @@ let push_new_uris options new_uris queue old =
   then List.fold_left (push old) queue new_uris
   else queue
 
-(* Authorized subjects *)
-let regeps = Str.regexps ["film"; "actor"; "actress"; "author"; "director";
-                          "producer"; "tv show"; "film-maker"]
 
-let is_authorized_subject subject = Str.exists regeps subject
-
-let is_authorized content =
-  List.exists is_authorized_subject (Content.subjects content)
 
 (**
    Insert the content if it contains at least one authorized subject
    Then return new known uris list with the associated subjects
 *)
 let insert_content content uris =
-  let authorized = is_authorized content in
+  let authorized = Content.is_authorized content in
   if authorized then Lwt.async (fun () -> Content.insert content);
   UriMap.add (Content.uri content) authorized uris
 

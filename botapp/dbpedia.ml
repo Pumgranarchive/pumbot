@@ -6,7 +6,8 @@ module Yojson = Yojson.Basic
 ********************************** Utils **************************************
 *******************************************************************************)
 
-let wikipedia_subject = "Wikipedia"
+let wikipedia_tag = Tag.make "Wikipedia"
+
 let talk_about = "Talk about"
 let mentioned_by = "Mentioned by"
 
@@ -31,9 +32,10 @@ let get uri =
     in
 
     let data_subjects = List.map format_subject data.subject in
-    let subjects = wikipedia_subject::data_subjects in
+    let data_tags = Tag.makes data_subjects in
+    let tags = wikipedia_tag::data_tags in
     lwt title, summary, body = Readability.get_data uri in
-    let content = (uri, title, summary, subjects) in
+    let content = Content.make uri title summary tags in
 
     let wuris = Readability.get_contained_uris body in
     let wlinks = Link.build_inter_link talk_about mentioned_by [uri] wuris in

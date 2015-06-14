@@ -11,10 +11,6 @@ val search : string -> Ptype.uri list Lwt.t
 
 (** [get uri]
     @return data getted from youtube of the given [uri]
-    formated as (content, links, uris)
 *)
 val switch : Ptype.uri ->
-  ((Ptype.uri * string * string * string list) *
-   (Rdf_uri.uri * Rdf_uri.uri * string * int) list *
-   Rdf_uri.uri list)
-  Lwt.t
+  (Utils.Content.t * Utils.Link.t list * Utils.Uri.t list) Lwt.t

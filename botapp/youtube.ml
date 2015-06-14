@@ -28,7 +28,7 @@ let video_of_uri uri =
   lwt videos = Youtube_http.get_videos_from_ids [id] in
   Lwt.return (List.hd videos)
 
-let youtube_subject = "Youtube"
+let youtube_tag = Tag.make "Youtube"
 
 (*
 **
@@ -45,8 +45,9 @@ let wrapper data_of_topic uri =
   let empty = ([], [], []) in
   lwt data = Lwt_list.dep_fold_left data_of_topic empty [topics;r_topics] in
   let uris, data_subjects, links = data in
-  let subjects = youtube_subject :: data_subjects in
-  let content = (uri, title, summary, subjects) in
+  let data_tags = Tag.makes data_subjects in
+  let tags = youtube_tag::data_tags in
+  let content = Content.make uri title summary tags in
   Lwt.return (content, links, uris)
 
 let append_data previous_data new_data =

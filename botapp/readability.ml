@@ -108,7 +108,8 @@ let get uri =
   lwt title, summary, body = get_data uri in
   lwt json = Opencalais_http.request ~display_body:false body in
   let subjects = get_social_tags json in
-  let content = (uri, title, summary, subjects) in
+  let tags = Tag.makes subjects in
+  let content = Content.make uri title summary tags in
 
   let buris = get_contained_uris body in
   let rlinks = Link.build_inter_link talk_about mentioned_by [uri] buris in
