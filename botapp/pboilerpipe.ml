@@ -55,13 +55,15 @@ let contained_uris_of body =
   List.limit 40 uris
 
 let body_of uri =
-  lwt body = Boilerpipe.boilerpipe Boilerpipe.Article uri in
+  lwt body = Boilerpipe.boilerpipe Boilerpipe.Default uri in
   Lwt.return (String.concat "" body)
 
 let data_of uri =
-  lwt body = Boilerpipe.boilerpipe Boilerpipe.Article uri in
+  lwt body = Boilerpipe.boilerpipe Boilerpipe.Default uri in
   let title = List.hd body in
   let content = String.concat "" (List.tl body) in
+  print_endline title;
+  print_endline content;
   let summary = Str.limit content 100 in
   Lwt.return (title, summary, content)
 
