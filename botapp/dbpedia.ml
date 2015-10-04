@@ -37,7 +37,7 @@ let get uri =
     lwt title, summary, body = Readability.get_data uri in
     let content = Content.make uri title summary tags in
 
-    let wuris = Readability.get_contained_uris body in
+    let wuris = Pboilerpipe.contained_uris_of body in
     let wlinks = Link.build_inter_link talk_about mentioned_by [uri] wuris in
 
     lwt yuris = Youtube.search title in
@@ -51,6 +51,6 @@ let get uri =
   with e ->
     begin
       print_endline ("\n[Error][Dbpedia] :: " ^ (Printexc.to_string e));
-      print_endline "Try Readability\n";
-      Readability.get uri
+      print_endline "Try Boilerpipe\n";
+      Pboilerpipe.get uri
     end

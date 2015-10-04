@@ -2,6 +2,7 @@ NAME :=		pum_bot
 
 ML :=		utils.ml	\
 		youtube.ml	\
+		pboilerpipe.ml	\
 		readability.ml 	\
 		dbpedia.ml	\
 		argParser.ml	\
@@ -9,10 +10,11 @@ ML :=		utils.ml	\
 
 MLI :=		argParser.mli	\
 		youtube.mli	\
+		pboilerpipe.mli	\
 		readability.mli	\
 		dbpedia.mli
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,opencalais_http
+PACKAGES :=	lwt,cohttp,cohttp.lwt,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,boilerpipe,opencalais_http
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)

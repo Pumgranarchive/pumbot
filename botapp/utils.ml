@@ -37,6 +37,10 @@ struct
   let exists regexps str =
     List.exists (fun r -> contains r str) regexps
 
+  let limit str size =
+    if (String.length str <= size) then str
+    else String.sub str 0 size
+
 end
 
 module List =
