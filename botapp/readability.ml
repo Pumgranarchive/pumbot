@@ -68,21 +68,6 @@ let get_data uri =
   (* lwt body' = Tidy.xhtml_of_html body in *)
   Lwt.return (title, summary, body)
 
-let get_social_tags json =
-  let open Yojson.Util in
-  let aux blist (title, elm) =
-    let type_group = member "_typeGroup" elm in
-    if (type_group != `Null &&
-        String.compare (to_string type_group) "socialTag" == 0)
-    then
-      let name = to_string (member "name" elm) in
-      let name' = Str.global_replace (Str.regexp "[_\\.]") " " name in
-      name'::blist
-    else blist
-  in
-  let list = to_assoc json in
-  List.fold_left aux [] list
-
 let talk_about = "Talk about"
 let mentioned_by = "Mentioned by"
 
@@ -96,8 +81,8 @@ let get uri =
   print_endline "Readability";
 
   lwt title, summary, body = get_data uri in
-  lwt json = Opencalais_http.request ~display_body:false body in
-  let subjects = get_social_tags json in
+  lwt json = Opencalais_http.request body in
+  let subjects = Opencalais_http.to_social_tags json in
   let tags = Tag.makes subjects in
   let content = Content.make uri title summary tags in
 
