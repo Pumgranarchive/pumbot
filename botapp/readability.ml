@@ -6,18 +6,8 @@ module Yojson = Yojson.Basic
 ***************************** Initialisation **********************************
 *******************************************************************************)
 
-let get_token () =
-  let ic = open_in "token" in
-  try
-    let token = input_line ic in
-    let () = close_in ic in
-    token
-  with e ->
-    close_in_noerr ic;
-    raise Not_found
-
-let () = Readability_http.set_token (get_token ())
-let () = Opencalais_http.set_token "z3k9bmug6udbqcqdwgt8qzq2"
+let () = Readability_http.set_token Token.readability
+let () = Opencalais_http.set_token Token.opencalais
 
 (******************************************************************************
 ********************************** Utils **************************************

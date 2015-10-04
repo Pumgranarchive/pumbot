@@ -5,6 +5,24 @@ let _ = Random.self_init ()
 let pumgrana_api_uri = Ptype.uri_of_string "http://127.0.0.1:8081/"
 let () = Pumgrana_http.set_pumgrana_api_uri pumgrana_api_uri
 
+module Token =
+struct
+
+  let get name =
+    let ic = open_in name in
+    try
+      let token = input_line ic in
+      let () = close_in ic in
+      token
+    with e ->
+      close_in_noerr ic;
+      raise Not_found
+
+  let readability = get "readability.token"
+  let opencalais = get "opencalais.token"
+
+end
+
 module Str =
 struct
 
