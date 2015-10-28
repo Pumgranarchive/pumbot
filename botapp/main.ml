@@ -7,7 +7,7 @@ module LinkMap = Map.Make(LinkId)
 let platforms =
   [(Youtube.is_youtube_uri,         Youtube.switch);
    (Dbpedia.is_wikipedia_uri,       Dbpedia.get);
-   (Pboilerpipe.is_something_else,  Pboilerpipe.get)]
+   (ExtractTools.is_something_else, Pxtractor.get)]
 
 let rec switch platforms uri =
   match platforms with

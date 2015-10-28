@@ -95,7 +95,9 @@ let discography uri =
   let data_of_topic p_data topic =
     lwt freebase_data = Freebase_http.get_topics topic in
     let _,freebase_title,_,_,_,freebase_str_urls = freebase_data in
+    print_endline "Dbpedia get discography";
     lwt songs = Dbpedia_http.get_discography freebase_title in
+    print_endline "Dbpedia done discography";
     lwt video_uris = Lwt_list.map_p (video_uri_of_song freebase_title) songs in
     let v_uris = uri::video_uris in
     let video_links = Link.build_each_on_all same_band v_uris in

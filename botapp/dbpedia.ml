@@ -24,6 +24,8 @@ let get uri =
 
     let open Dbpedia_record.Basic in
     let str_uri = Ptype.string_of_uri uri in
+    print_endline str_uri;
+    print_endline "Dbpedia get basic informations";
     lwt data = Lwt_list.hd (Dbpedia_http.get_basic_informations_by_uri str_uri) in
 
     let format_subject subject =
@@ -34,13 +36,13 @@ let get uri =
     let data_subjects = List.map format_subject data.subject in
     let data_tags = Tag.makes data_subjects in
     let tags = wikipedia_tag::data_tags in
-    lwt title, summary, body = Readability.get_data uri in
-    let content = Content.make uri title summary tags in
+    lwt doc = Pxtractor.data_of uri in
+    let content = Content.make uri doc.Xtractor.title doc.Xtractor.summary tags in
 
-    let wuris = Pboilerpipe.contained_uris_of body in
+    let wuris = ExtractTools.contained_uris_of doc.Xtractor.content in
     let wlinks = Link.build_inter_link talk_about mentioned_by [uri] wuris in
 
-    lwt yuris = Youtube.search title in
+    lwt yuris = Youtube.search doc.Xtractor.title in
     let ylinks = Link.build_inter_link talk_about mentioned_by [uri] yuris in
     let _ = Link.insert ylinks in (* Always insert youtube links  *)
 
@@ -51,6 +53,6 @@ let get uri =
   with e ->
     begin
       print_endline ("\n[Error][Dbpedia] :: " ^ (Printexc.to_string e));
-      print_endline "Try Boilerpipe\n";
-      Pboilerpipe.get uri
+      print_endline "Try ...\n";
+      Pxtractor.get uri
     end

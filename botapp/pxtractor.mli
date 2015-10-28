@@ -1,4 +1,6 @@
-(** {b Boilerpipe abastraction}  *)
+(** {b Xtractor abastraction}  *)
+
+type document = Xtractor.document
 
 (** [get uri]
     @return data getted from readability of the given [uri]
@@ -12,4 +14,4 @@ val body_of : Ptype.uri -> string Lwt.t
 
 (** [get_data uri]
     @return the getted title, summary and body of the given [uri] *)
-val data_of : Ptype.uri -> (string * string * string) Lwt.t
+val data_of : Ptype.uri -> document Lwt.t

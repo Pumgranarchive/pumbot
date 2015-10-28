@@ -41,7 +41,7 @@ let get uri =
   let tags = Tag.makes subjects in
   let content = Content.make uri title summary tags in
 
-  let buris = Pboilerpipe.contained_uris_of body in
+  let buris = ExtractTools.contained_uris_of body in
   let rlinks = Link.build_inter_link talk_about mentioned_by [uri] buris in
 
   lwt yuris = Youtube.search title in
