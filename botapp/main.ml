@@ -30,7 +30,7 @@ let push old deep queue uri =
   then Magic_queue.push (deep, uri) queue
   else queue
 
-let push_new_uris options deep new_uris queue old =
+let push_new_uris options deep new_uris old queue =
   if not options.not_recursive             (* If recursive mode is activated *)
   then List.fold_left (push old deep) queue new_uris
   else queue
@@ -52,7 +52,7 @@ let insert_content content uris =
 
    Then return new known links list
 *)
-let insert_links uri new_links links uris =
+let old_insert_links uri new_links links uris =
   let add_if_not_exists links link =
     let link_id = Link.id link in
     if LinkMap.for_all (fun id link -> String.compare id link_id != 0) links
@@ -79,6 +79,12 @@ let insert_links uri new_links links uris =
   links'
 
 (**
+   insert all links
+*)
+let insert_links new_links =
+  Lwt.async (fun () -> Link.insert new_links)
+
+(**
    Get information from content,
    - Insert them
    - Build new lists of known uris and links
@@ -88,15 +94,15 @@ let insert_links uri new_links links uris =
    Or the limit of iterations
 *)
 let iter switch options queue =
-  let aux (uris, links) queue (deep, uri) =
+  let aux old_uris queue (deep, uri) =
     lwt content, new_links, new_uris = switch uri in
-    let uris' = insert_content content uris in
-    let links' = insert_links uri new_links links uris' in
-    let queue' = push_new_uris options (deep + 1) new_uris queue uris' in
-    Lwt.return ((uris', links'), queue')
+    let old_uris' = insert_content content old_uris in
+    (* let links' = insert_links uri new_links links old_uris' in *)
+    let () = insert_links new_links in
+    let queue' = push_new_uris options (deep + 1) new_uris old_uris' queue in
+    Lwt.return (old_uris', queue')
   in
-  let empty = (UriMap.empty, LinkMap.empty) in
-  lwt _ = Lwt_magic_queue.fold_left aux options empty queue in
+  lwt _ = Lwt_magic_queue.fold_left aux options UriMap.empty queue in
   Lwt.return ()
 
 let run (list, options) =
