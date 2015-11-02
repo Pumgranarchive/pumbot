@@ -129,19 +129,24 @@ end
 module Lwt_magic_queue =
 struct
 
-  let fold_left func limit init queue =
-    let print e h =
-      print_endline ((Ptype.string_of_uri h) ^ " : " ^ (Printexc.to_string e))
+  let fold_left func options init queue =
+    let open ArgParser in
+    let print e (d, h) =
+      Printf.printf "[%d] %s : %s\n" d (Ptype.string_of_uri h) (Printexc.to_string e)
     in
-    let rec aux data i = function
-      | _ when limit >= 0 && i >= limit -> Lwt.return data
+    let rec fold data i head queue =
+      lwt data', queue' = try_lwt func data queue head
+      with exc -> (print exc head; Lwt.return (data, queue))
+      in
+      aux data' (i + 1) queue'
+     and aux data i = function
       | []   -> Lwt.return data
-      | h::q ->
-        lwt d', q' =
-          try_lwt func data q h
-          with e -> (print e h; Lwt.return (data, q))
-        in
-        aux d' (i + 1) q'
+      | _ when options.iteration_max > 0 && i > options.iteration_max ->
+        Lwt.return data
+      | (deep, uri)::q ->
+        if (options.max_deep > 0 && deep > options.max_deep)
+        then Lwt.return data
+        else fold data i (deep, uri) q
     in
     aux init 0 queue
 

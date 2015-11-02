@@ -1,13 +1,13 @@
 NAME :=		pum_bot
 
-ML :=		utils.ml	\
+ML :=		argParser.ml	\
+		utils.ml	\
 		extractTools.ml	\
 		youtube.ml	\
 		pboilerpipe.ml	\
 		pxtractor.ml	\
 		readability.ml 	\
 		dbpedia.ml	\
-		argParser.ml	\
 		main.ml
 
 MLI :=		argParser.mli	\

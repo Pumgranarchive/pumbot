@@ -24,15 +24,15 @@ let is_equal a b _ = (Ptype.compare_uri a b = 0)
    Push new_uri into the queue
    If it is not already contains into old list or the queue itself
 *)
-let push old queue uri =
+let push old deep queue uri =
   if (UriMap.for_all (fun k v -> not_equal uri k) old &&
-      Magic_queue.for_all (not_equal uri) queue)
-  then Magic_queue.push uri queue
+      Magic_queue.for_all (fun (d, u) -> not_equal uri u) queue)
+  then Magic_queue.push (deep, uri) queue
   else queue
 
-let push_new_uris options new_uris queue old =
+let push_new_uris options deep new_uris queue old =
   if not options.not_recursive             (* If recursive mode is activated *)
-  then List.fold_left (push old) queue new_uris
+  then List.fold_left (push old deep) queue new_uris
   else queue
 
 
@@ -87,22 +87,23 @@ let insert_links uri new_links links uris =
    Until there is no uri left in the queue to visit.
    Or the limit of iterations
 *)
-let iter switch options uris =
-  let aux (uris, links) queue uri =
+let iter switch options queue =
+  let aux (uris, links) queue (deep, uri) =
     lwt content, new_links, new_uris = switch uri in
     let uris' = insert_content content uris in
     let links' = insert_links uri new_links links uris' in
-    let queue' = push_new_uris options new_uris queue uris' in
+    let queue' = push_new_uris options (deep + 1) new_uris queue uris' in
     Lwt.return ((uris', links'), queue')
   in
-  let queue = Magic_queue.from_list uris in
   let empty = (UriMap.empty, LinkMap.empty) in
-  lwt _ = Lwt_magic_queue.fold_left aux options.iteration_max empty queue in
+  lwt _ = Lwt_magic_queue.fold_left aux options empty queue in
   Lwt.return ()
 
 let run (list, options) =
-  let uris = List.map Ptype.uri_of_string list in
-  iter (switch platforms) options uris
+  let init str = (0, Ptype.uri_of_string str) in
+  let uris = List.map init list in
+  let queue = Magic_queue.from_list uris in
+  iter (switch platforms) options queue
 
 let main () =
   let input_list = List.tl (Array.to_list Sys.argv) in
