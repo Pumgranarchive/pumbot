@@ -257,29 +257,32 @@ struct
   let nature (origin, target, nature, mark) = nature
   let mark (origin, target, nature, mark) = mark
 
-  let build_inter_link n1 n2 l1 l2 =
-    let dep2 e1 build e2 =
-      let mark = Random.float 100. in
-      if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, n1, mark)::((e2, e1, n2, mark)::build)
-      else build
+  let build_inter_link nature_1 nature_2 l1 l2 =
+    let dep2 uri_1 (prev_mark, blist) uri_2 =
+      let mark = prev_mark -. 0.001 in
+      if Ptype.compare_uri uri_1 uri_2 != 0
+      then (mark, ((uri_1, uri_2, nature_1, mark) ::
+                   ((uri_2, uri_1, nature_2, mark) :: blist)))
+      else (prev_mark, blist)
     in
-    let dep1 build e1 =
-      List.fold_left (dep2 e1) build l2
+    let dep1 data uri_1 =
+      List.fold_left (dep2 uri_1) data l2
     in
-    List.fold_left dep1 [] l1
+    let lowest_mark, blist = List.fold_left dep1 (1., []) l1 in
+    blist
 
   let build_each_on_all nature list =
-    let dep2 e1 build e2 =
-      let mark = Random.float 100. in
-      if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, nature, mark)::build
-      else build
+    let dep2 uri_1 (prev_mark, blist) uri_2 =
+      let mark = prev_mark -. 0.001 in
+      if Ptype.compare_uri uri_1 uri_2 != 0
+      then (mark, (uri_1, uri_2, nature, mark)::blist)
+      else (prev_mark, blist)
     in
-    let dep1 build e1 =
-      List.fold_left (dep2 e1) build list
+    let dep1 data uri_1 =
+      List.fold_left (dep2 uri_1) data list
     in
-    List.fold_left dep1 [] list
+    let lowest_mark, blist = List.fold_left dep1 (1., []) list in
+    blist
 
   let insert links =
     let () = print links in
