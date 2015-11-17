@@ -1,20 +1,24 @@
 NAME :=		pum_bot
 
-ML :=		utils.ml	\
+ML :=		argParser.ml	\
+		utils.ml	\
+		extractTools.ml	\
 		youtube.ml	\
 		pboilerpipe.ml	\
+		pxtractor.ml	\
 		readability.ml 	\
 		dbpedia.ml	\
-		argParser.ml	\
 		main.ml
 
 MLI :=		argParser.mli	\
+		extractTools.mli\
 		youtube.mli	\
 		pboilerpipe.mli	\
+		pxtractor.mli	\
 		readability.mli	\
 		dbpedia.mli
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,boilerpipe,opencalais_http
+PACKAGES :=	lwt,cohttp,cohttp.lwt,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,boilerpipe,xtractor,opencalais_http
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)

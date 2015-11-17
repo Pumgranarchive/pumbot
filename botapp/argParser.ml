@@ -10,8 +10,8 @@ exception Help
 exception Invalid_Argument
 
 let empty = { not_recursive = false;
-              iteration_max = -1;
-              max_deep = -1;            (* Not Implemented *)
+              iteration_max = 0;
+              max_deep = 0;
               verbose = false;          (* Not Implemented *)
               quick = false;            (* Not Implemented *)
               offline = false }         (* Not Implemented *)

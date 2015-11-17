@@ -129,19 +129,24 @@ end
 module Lwt_magic_queue =
 struct
 
-  let fold_left func limit init queue =
-    let print e h =
-      print_endline ((Ptype.string_of_uri h) ^ " : " ^ (Printexc.to_string e))
+  let fold_left func options init queue =
+    let open ArgParser in
+    let print e (d, h) =
+      Printf.printf "[%d] %s : %s\n" d (Ptype.string_of_uri h) (Printexc.to_string e)
     in
-    let rec aux data i = function
-      | _ when limit >= 0 && i >= limit -> Lwt.return data
+    let rec fold data i head queue =
+      lwt data', queue' = try_lwt func data queue head
+      with exc -> (print exc head; Lwt.return (data, queue))
+      in
+      aux data' (i + 1) queue'
+     and aux data i = function
       | []   -> Lwt.return data
-      | h::q ->
-        lwt d', q' =
-          try_lwt func data q h
-          with e -> (print e h; Lwt.return (data, q))
-        in
-        aux d' (i + 1) q'
+      | _ when options.iteration_max > 0 && i > options.iteration_max ->
+        Lwt.return data
+      | (deep, uri)::q ->
+        if (options.max_deep > 0 && deep > options.max_deep)
+        then Lwt.return data
+        else fold data i (deep, uri) q
     in
     aux init 0 queue
 
@@ -252,29 +257,32 @@ struct
   let nature (origin, target, nature, mark) = nature
   let mark (origin, target, nature, mark) = mark
 
-  let build_inter_link n1 n2 l1 l2 =
-    let dep2 e1 build e2 =
-      let mark = Random.float 100. in
-      if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, n1, mark)::((e2, e1, n2, mark)::build)
-      else build
+  let build_inter_link nature_1 nature_2 l1 l2 =
+    let dep2 uri_1 (prev_mark, blist) uri_2 =
+      let mark = prev_mark -. 0.001 in
+      if Ptype.compare_uri uri_1 uri_2 != 0
+      then (mark, ((uri_1, uri_2, nature_1, mark) ::
+                   ((uri_2, uri_1, nature_2, mark) :: blist)))
+      else (prev_mark, blist)
     in
-    let dep1 build e1 =
-      List.fold_left (dep2 e1) build l2
+    let dep1 data uri_1 =
+      List.fold_left (dep2 uri_1) data l2
     in
-    List.fold_left dep1 [] l1
+    let lowest_mark, blist = List.fold_left dep1 (1., []) l1 in
+    blist
 
   let build_each_on_all nature list =
-    let dep2 e1 build e2 =
-      let mark = Random.float 100. in
-      if Ptype.compare_uri e1 e2 != 0
-      then (e1, e2, nature, mark)::build
-      else build
+    let dep2 uri_1 (prev_mark, blist) uri_2 =
+      let mark = prev_mark -. 0.001 in
+      if Ptype.compare_uri uri_1 uri_2 != 0
+      then (mark, (uri_1, uri_2, nature, mark)::blist)
+      else (prev_mark, blist)
     in
-    let dep1 build e1 =
-      List.fold_left (dep2 e1) build list
+    let dep1 data uri_1 =
+      List.fold_left (dep2 uri_1) data list
     in
-    List.fold_left dep1 [] list
+    let lowest_mark, blist = List.fold_left dep1 (1., []) list in
+    blist
 
   let insert links =
     let () = print links in
