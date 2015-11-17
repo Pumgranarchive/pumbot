@@ -79,7 +79,11 @@ let wiki uri =
   let data_of_topic p_data topic =
     lwt wiki_data = Freebase_http.get_topics topic in
     let tags = talk_about, mentioned_by in
-    Lwt.return (build_wiki_data [uri] tags p_data wiki_data)
+    let data_to_return = match wiki_data with
+    | Some data -> build_wiki_data [uri] tags p_data data
+    | None      -> ([], [], [])
+    in
+    Lwt.return (data_to_return)
   in
   wrapper data_of_topic uri
 
@@ -92,16 +96,21 @@ let made = "Made"
 let same_band = "Same Band"
 
 let discography uri =
-  let data_of_topic p_data topic =
-    lwt freebase_data = Freebase_http.get_topics topic in
-    let _,freebase_title,_,_,_,freebase_str_urls = freebase_data in
+  let extract_data previous_data current_data =
+    let _,freebase_title,_,_,_,freebase_str_urls = current_data in
     lwt songs = Dbpedia_http.get_discography freebase_title in
     lwt video_uris = Lwt_list.map_p (video_uri_of_song freebase_title) songs in
     let v_uris = uri::video_uris in
     let video_links = Link.build_each_on_all same_band v_uris in
     let tags = made_by, made in
-    let new_data = build_wiki_data v_uris tags p_data freebase_data in
+    let new_data = build_wiki_data v_uris tags previous_data current_data in
     Lwt.return (append_data new_data (video_uris, [], video_links))
+  in
+  let data_of_topic previous_data topic =
+    lwt freebase_data = Freebase_http.get_topics topic in
+    match freebase_data with
+      | Some current_data      -> extract_data previous_data current_data
+      | None                   -> Lwt.return ([], [], [])
   in
   wrapper data_of_topic uri
 
