@@ -4,6 +4,7 @@
 *)
 
 module Yojson = Yojson.Basic
+module Conf = Conf.Configuration
 
 (** Save past launch uris  *)
 let old = ref []
@@ -20,7 +21,7 @@ let filter_and_add uris =
 (** Launch the bot on the given uris *)
 let launch max_deep not_recursice uris =
   let uris = filter_and_add uris in
-  let path = "../botapp/pum_bot" in
+  let path = Conf.Bot.directory ^ "pum_bot" in
   let option_n = if not_recursice then " -n" else "" in
   let option_d = " -d " ^ (string_of_int max_deep) in
   let options = option_d ^ option_n in
