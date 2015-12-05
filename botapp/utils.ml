@@ -1,6 +1,8 @@
 (* Initialize the random *)
 let _ = Random.self_init ()
 
+let (>>=) = Lwt.bind
+
 module File =
 struct
 
@@ -217,7 +219,8 @@ struct
   let insert (uri, title, summary, tags) =
     print_endline "\nInsert Content ::";
     print (uri, title, summary, tags);
-    Pumgrana_http.insert_content uri title summary tags
+    try_lwt Pumgrana_http.insert_content uri title summary tags >>= (fun uri -> Lwt.return (Some uri))
+    with e -> (print_endline ("Failed to insert content " ^ (Printexc.to_string e)); Lwt.return None)
 
 end
 
@@ -291,7 +294,9 @@ struct
 
   let insert links =
     let () = print links in
-    Pumgrana_http.insert_links links
+    try_lwt Pumgrana_http.insert_links links >>= (fun uri -> Lwt.return (Some uri))
+    with e -> (print_endline ("Failed to insert links " ^ (Printexc.to_string e)); Lwt.return None)
+
 
 end
 
