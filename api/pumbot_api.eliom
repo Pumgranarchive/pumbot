@@ -21,16 +21,17 @@ let filter_and_add uris =
 (** Launch the bot on the given uris *)
 let launch max_deep not_recursice uris =
   let uris = filter_and_add uris in
-  let path = Conf.Bot.directory ^ "pum_bot" in
+  let cd = "cd " ^ Conf.Bot.directory in
+  let bin = "./pum_bot" in
   let option_n = if not_recursice then " -n" else "" in
   let option_d = " -d " ^ (string_of_int max_deep) in
   let options = option_d ^ option_n in
-  let redirect = "> ~/bot.log 2>&1" in
+  let redirect = ">> ~/bot.log 2>&1" in
   let bg = "&" in
   let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\"" in
   let str_uris = List.map string_of_uri uris in
   let concat_uris = String.concat " " str_uris in
-  let cmd = String.concat " " [path; options; concat_uris; (* redirect; *) bg] in
+  let cmd = String.concat " " [cd; "&&"; bin; options; concat_uris; redirect; bg] in
   if List.length uris > 0
   then Lwt.async (fun () -> print_endline cmd; Lwt.return (ignore (Sys.command cmd)))
 
@@ -41,6 +42,9 @@ let run (max_deep, (not_recursice_opt, uris_encode)) () =
     | None -> false
   in
   let uris = List.map (fun x -> Ptype.uri_of_string (Ptype.uri_decode x)) uris_encode in
+  print_endline "Run on ::";
+  List.iter (fun u -> print_endline (Ptype.string_of_uri u)) uris;
+  print_endline "";
   let () = launch max_deep not_recursice uris in
   let json = `Assoc [("code", `Int 200)] in
   Lwt.return (Yojson.to_string json, "application/json")
