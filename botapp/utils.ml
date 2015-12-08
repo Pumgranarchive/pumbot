@@ -20,6 +20,7 @@ struct
 
   let readability = get "readability.token"
   let opencalais = get "opencalais.token"
+  let youtube = get "youtube.token"
 
 end
 
