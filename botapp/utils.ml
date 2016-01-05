@@ -1,27 +1,32 @@
 (* Initialize the random *)
 let _ = Random.self_init ()
 
+let (>>=) = Lwt.bind
+
+module File =
+struct
+
+  let first_line_of name =
+    let ic = open_in name in
+    try
+      let line = input_line ic in
+      let () = close_in ic in
+      line
+    with e ->
+      close_in_noerr ic;
+      raise Not_found
+end
+
 (* Initialize the pumgrana api uri *)
-let pumgrana_api_uri = Ptype.uri_of_string "http://127.0.0.1:8081/"
+let pumgrana_api_uri = Ptype.uri_of_string (File.first_line_of "api.host")
 let () = Pumgrana_http.set_pumgrana_api_uri pumgrana_api_uri
 
 module Token =
 struct
 
-  let get name =
-    let ic = open_in name in
-    try
-      let token = input_line ic in
-      let () = close_in ic in
-      token
-    with e ->
-      close_in_noerr ic;
-      raise Not_found
-
-  let readability = get "readability.token"
-  let opencalais = get "opencalais.token"
-  let youtube = get "youtube.token"
-
+  let readability = File.first_line_of "readability.token"
+  let opencalais = File.first_line_of "opencalais.token"
+  let youtube = File.first_line_of "youtube.token"
 end
 
 module Str =
@@ -213,7 +218,8 @@ struct
   let insert (uri, title, summary, tags) =
     print_endline "\nInsert Content ::";
     print (uri, title, summary, tags);
-    Pumgrana_http.insert_content uri title summary tags
+    try_lwt Pumgrana_http.insert_content uri title summary tags >>= (fun uri -> Lwt.return (Some uri))
+    with e -> (print_endline ("Failed to insert content " ^ (Printexc.to_string e)); Lwt.return None)
 
 end
 
@@ -287,7 +293,9 @@ struct
 
   let insert links =
     let () = print links in
-    Pumgrana_http.insert_links links
+    try_lwt Pumgrana_http.insert_links links >>= (fun uri -> Lwt.return (Some uri))
+    with e -> (print_endline ("Failed to insert links " ^ (Printexc.to_string e)); Lwt.return None)
+
 
 end
 

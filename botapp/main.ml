@@ -43,8 +43,8 @@ let push_new_uris options deep new_uris old queue =
 *)
 let insert_content content uris =
   let authorized = Content.is_authorized content in
-  if authorized then Lwt.async (fun () -> Content.insert content);
-  UriMap.add (Content.uri content) authorized uris
+  lwt _ = if authorized then Content.insert content else Lwt.return None in
+  Lwt.return (UriMap.add (Content.uri content) authorized uris)
 
 (**
    - Add new links into the old links if they are not already inside
@@ -81,8 +81,7 @@ let old_insert_links uri new_links links uris =
 (**
    insert all links
 *)
-let insert_links new_links =
-  Lwt.async (fun () -> Link.insert new_links)
+let insert_links new_links = Link.insert new_links
 
 (**
    Get information from content,
@@ -96,9 +95,9 @@ let insert_links new_links =
 let iter switch options queue =
   let aux old_uris queue (deep, uri) =
     lwt content, new_links, new_uris = switch uri in
-    let old_uris' = insert_content content old_uris in
+    lwt old_uris' = insert_content content old_uris in
     (* let links' = insert_links uri new_links links old_uris' in *)
-    let () = insert_links new_links in
+    lwt _ = insert_links new_links in
     let queue' = push_new_uris options (deep + 1) new_uris old_uris' queue in
     Lwt.return (old_uris', queue')
   in

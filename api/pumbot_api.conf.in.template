@@ -21,8 +21,11 @@
     <host hostfilter="*">
       <static dir="%%STATICDIR%%" />
       <static dir="%%ELIOMSTATICDIR%%" />
-      <eliommodule module="%%LIBDIR%%/%%PROJECT_NAME%%.cma" />
-      <eliom/>
+      <eliom module="%%LIBDIR%%/%%PROJECT_NAME%%.cma">
+         <bot>
+            <directory>../botapp/</directory>
+         </bot>
+      </eliom>
     </host>
   </server>
 </ocsigen>
