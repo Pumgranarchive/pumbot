@@ -15,7 +15,6 @@ struct
     with e ->
       close_in_noerr ic;
       raise Not_found
-
 end
 
 (* Initialize the pumgrana api uri *)
@@ -27,7 +26,7 @@ struct
 
   let readability = File.first_line_of "readability.token"
   let opencalais = File.first_line_of "opencalais.token"
-
+  let youtube = File.first_line_of "youtube.token"
 end
 
 module Str =
