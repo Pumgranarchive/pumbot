@@ -9,12 +9,22 @@ module Conf = Conf.Configuration
 (** Save past launch uris  *)
 let known_uris = ref []
 
+let equal u1 u2 = Ptype.compare_uri u1 u2 == 0
+
 (** Add given uris only if there are totaly unkown *)
 let filter uris =
   let aux uri =
-    let exists = List.exists (fun x -> Ptype.compare_uri uri x == 0) !known_uris in
+
+    let exists = List.exists (equal uri) !known_uris in
+
+    (* If unknown, add to the list to not crawl again *)
     if not exists then known_uris := uri::!known_uris;
+
+    (* Limit the list size to 100 to avoid over flow *)
+    if List.length !known_uris > 100 then known_uris := (List.tl !known_uris);
+
     not exists
+
   in
   List.filter aux uris
 
