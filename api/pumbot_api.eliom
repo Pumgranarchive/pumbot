@@ -7,20 +7,20 @@ module Yojson = Yojson.Basic
 module Conf = Conf.Configuration
 
 (** Save past launch uris  *)
-let old = ref []
+let known_uris = ref []
 
 (** Add given uris only if there are totaly unkown *)
-let filter_and_add uris =
+let filter uris =
   let aux uri =
-    let exists = List.exists (fun x -> Ptype.compare_uri uri x = 0) !old in
-    if not exists then old := uri::!old;
+    let exists = List.exists (fun x -> Ptype.compare_uri uri x == 0) !known_uris in
+    if not exists then known_uris := uri::!known_uris;
     not exists
   in
   List.filter aux uris
 
 (** Launch the bot on the given uris *)
 let launch max_deep not_recursice uris =
-  let uris = filter_and_add uris in
+  let uris = filter uris in
   let cd = "cd " ^ Conf.Bot.directory in
   let bin = "./pum_bot" in
   let option_n = if not_recursice then " -n" else "" in
