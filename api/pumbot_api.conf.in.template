@@ -24,6 +24,7 @@
       <eliom module="%%LIBDIR%%/%%PROJECT_NAME%%.cma">
          <bot>
             <directory>../botapp/</directory>
+            <logdir>~/botlog/</logdir>
          </bot>
       </eliom>
     </host>

@@ -18,7 +18,7 @@ let filter uris =
     let exists = List.exists (equal uri) !known_uris in
 
     (* If unknown, add to the list to not crawl again *)
-    if not exists then known_uris := uri::!known_uris;
+    if not exists then known_uris := !known_uris@[uri];
 
     (* Limit the list size to 100 to avoid over flow *)
     if List.length !known_uris > 100 then known_uris := (List.tl !known_uris);
@@ -28,17 +28,23 @@ let filter uris =
   in
   List.filter aux uris
 
+(* Static settings for the launch function *)
+let bg = "&"
+let bin = "./pum_bot"
+let cd = "cd " ^ Conf.Bot.directory
+let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
+let not_alphanum = Str.regexp "[^a-zA-Z\d\s]"
+
 (** Launch the bot on the given uris *)
 let launch max_deep not_recursice uris =
   let uris = filter uris in
-  let cd = "cd " ^ Conf.Bot.directory in
-  let bin = "./pum_bot" in
   let option_n = if not_recursice then " -n" else "" in
   let option_d = " -d " ^ (string_of_int max_deep) in
   let options = option_d ^ option_n in
-  let redirect = ">> ~/bot.log 2>&1" in
-  let bg = "&" in
-  let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\"" in
+  let first_uri = Ptype.string_of_uri (List.hd uris) in
+  let uri_file = Str.global_replace not_alphanum "_" first_uri in
+  let logfile = Conf.Bot.logdir ^ uri_file ^".log" in
+  let redirect = ">> "^ logfile ^" 2>&1" in
   let str_uris = List.map string_of_uri uris in
   let concat_uris = String.concat " " str_uris in
   let cmd = String.concat " " [cd; "&&"; bin; options; concat_uris; redirect; bg] in

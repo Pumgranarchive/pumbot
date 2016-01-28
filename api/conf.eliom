@@ -62,6 +62,7 @@ struct
     let block = Read.block Read.config "bot"
 
     let directory = Read.string block "directory"
+    let logdir = Read.string block "logdir"
 
   end
 
