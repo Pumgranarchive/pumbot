@@ -32,7 +32,6 @@ let filter uris =
   List.filter aux uris
 
 (* Static settings for the launch function *)
-let bg = "&"
 let bin = "./pum_bot"
 let cd = "cd " ^ Conf.Bot.directory
 let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
@@ -51,7 +50,7 @@ let launch max_deep not_recursice uris =
   let redirect = ">> "^ logfile ^" 2>&1" in
   let str_uris = List.map string_of_uri uris in
   let concat_uris = String.concat " " str_uris in
-  let cmd = String.concat " " [cd; "&&"; bin; options; concat_uris; redirect; bg] in
+  let cmd = String.concat " " [cd; "&&"; bin; options; concat_uris; redirect] in
   (* Log launched command *)
   print_endline cmd;
   (* Add uri to list *)
