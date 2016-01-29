@@ -22,6 +22,9 @@
       <static dir="%%STATICDIR%%" />
       <static dir="%%ELIOMSTATICDIR%%" />
       <eliom module="%%LIBDIR%%/%%PROJECT_NAME%%.cma">
+         <api>
+            <host>127.0.0.1:8081</host>
+         </api>
          <bot>
             <directory>../botapp/</directory>
             <logdir>~/botlog/</logdir>

@@ -56,6 +56,15 @@ struct
 
   end
 
+  module Api =
+  struct
+
+    let block = Read.block Read.config "bot"
+
+    let host = Read.string block "host"
+
+  end
+
   module Bot =
   struct
 

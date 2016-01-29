@@ -35,17 +35,23 @@ let filter uris =
 let bin = "./pum_bot"
 let cd = "cd " ^ Conf.Bot.directory
 let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
-let not_alphanum = Str.regexp "[^a-zA-Z\d\s]"
+let not_alphanum = Str.regexp "[^a-zA-Z\\d\\s]"
+let http = Str.regexp "^https?://"
 let string_not_equal s1 s2 = String.compare s1 s2 != 0
+let option_a = " -a " ^ Conf.Api.host
+
+let filename_of_uri str_uri =
+  let without_protocol = Str.global_replace http "" str_uri in
+  Str.global_replace not_alphanum "_" without_protocol
 
 (** Launch the bot on the given uris *)
 let launch max_deep not_recursice uris =
   let uris = filter uris in
   let option_n = if not_recursice then " -n" else "" in
   let option_d = " -d " ^ (string_of_int max_deep) in
-  let options = option_d ^ option_n in
+  let options = option_d ^ option_n ^ option_a in
   let first_str_uri = Ptype.string_of_uri (List.hd uris) in
-  let uri_file = Str.global_replace not_alphanum "_" first_str_uri in
+  let uri_file = filename_of_uri first_str_uri in
   let logfile = Conf.Bot.logdir ^ uri_file ^".log" in
   let redirect = ">> "^ logfile ^" 2>&1" in
   let str_uris = List.map string_of_uri uris in

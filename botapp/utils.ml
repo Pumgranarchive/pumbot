@@ -17,10 +17,6 @@ struct
       raise Not_found
 end
 
-(* Initialize the pumgrana api uri *)
-let pumgrana_api_uri = Ptype.uri_of_string (File.first_line_of "api.host")
-let () = Pumgrana_http.set_pumgrana_api_uri pumgrana_api_uri
-
 module Token =
 struct
 
