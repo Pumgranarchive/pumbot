@@ -110,9 +110,15 @@ let run (list, options) =
   let queue = Magic_queue.from_list uris in
   iter (switch platforms) options queue
 
+(** Initialize the pumgrana api uri *)
+let init options =
+  Pumgrana_http.set_pumgrana_api_uri options.api_host
+
 let main () =
   let input_list = List.tl (Array.to_list Sys.argv) in
-  try run (ArgParser.get_options input_list)
+  let options = ArgParser.get_options input_list in
+  let () = init options in
+  try run options
   with
   | ArgParser.Invalid_Argument
   | ArgParser.Help             -> Lwt.return ()

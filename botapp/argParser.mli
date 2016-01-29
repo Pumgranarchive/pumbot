@@ -3,13 +3,13 @@
 (** {b ArgParser parse and format argument} *)
 
 (** The module type *)
-type t =
-  { mutable not_recursive : bool;
-    mutable iteration_max : int;
-    mutable max_deep : int;
-    mutable verbose : bool;
-    mutable quick : bool;
-    mutable offline : bool }
+type t = {
+  mutable api_host : Ptype.uri;
+  mutable not_recursive : bool;
+  mutable iteration_max : int;
+  mutable max_deep : int;
+  mutable verbose : bool
+}
 
 (** Raise in case of help asking *)
 exception Help
