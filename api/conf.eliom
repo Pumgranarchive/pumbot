@@ -63,6 +63,7 @@ struct
 
     let directory = Read.string block "directory"
     let logdir = Read.string block "logdir"
+    let max_simultaneous_process = Read.int block "maxsimultaneousprocess"
 
   end
 
