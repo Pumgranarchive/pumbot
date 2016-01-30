@@ -61,7 +61,7 @@ let exec command logfile =
   print_cmd command logfile;
 
   let fd = Unix.openfile logfile open_log_flag log_permition in
-  let forward = `FD_move fd in
+  let forward = `FD_copy fd in
   lwt status = Lwt_process.exec ~stdout:forward ~stderr:forward command in
   let () = Unix.close fd in
 
@@ -113,8 +113,8 @@ let run (max_deep, (not_recursice_opt, uris_encoded)) () =
   let overloading = overloaded () in
   if (List.length filetred_uris > 0) then (
     let first_str_uri = Ptype.string_of_uri (List.hd filetred_uris) in
-    if (not overloading) then Lwt.async launch
-    else print_endline ("System overlading, thus not launching on "^ first_str_uri));
+    if (overloading) then print_endline ("System overlading, thus not launching on "^ first_str_uri)
+    else Lwt.async launch);
   let code = if (overloading) then 503 else 200 in
   let json = `Assoc [("code", `Int code)] in
   Lwt.return (Yojson.to_string json, "application/json")
