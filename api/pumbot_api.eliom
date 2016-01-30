@@ -31,42 +31,72 @@ let filter uris =
   in
   List.filter aux uris
 
-(* Static settings for the launch function *)
-let bin = "./pum_bot"
-let cd = "cd " ^ Conf.Bot.directory
-let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
+(* make command settings *)
+let bin = "./"^ Conf.Bot.directory ^"/pum_bot"
+let option_a = ["-a"; Conf.Api.host]
+
+let make_command options =
+  (bin, Array.of_list (bin::options))
+
+let print_cmd (bin, command) logfile =
+  let cmd_str = Array.fold_left (fun str opt -> str ^" "^ opt) "" command in
+  let with_redirection = cmd_str ^" 2>1 "^ logfile in
+  print_endline with_redirection
+
+(* Static settings for filename_of_uri function *)
 let not_alphanum = Str.regexp "[^a-zA-Z\\d\\s]"
 let http = Str.regexp "^https?://"
-let string_not_equal s1 s2 = String.compare s1 s2 != 0
-let option_a = " -a " ^ Conf.Api.host
 
 let filename_of_uri str_uri =
   let without_protocol = Str.global_replace http "" str_uri in
   Str.global_replace not_alphanum "_" without_protocol
 
+(* Exec settings *)
+let open_log_flag = Unix.([O_WRONLY; O_APPEND; O_CREAT])
+let log_permition = 0o440               (* Read for user and group *)
+
+let exec command logfile =
+
+  (* Print command *)
+  print_cmd command logfile;
+
+  let fd = Unix.openfile logfile open_log_flag log_permition in
+  let forward = `FD_move fd in
+  lwt status = Lwt_process.exec ~stdout:forward ~stderr:forward command in
+  let () = Unix.close fd in
+
+  Lwt.return status
+
+(* Static settings for the prepare_and_exec function *)
+let string_not_equal s1 s2 = String.compare s1 s2 != 0
+let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
+
 (** Launch the bot on the given uris *)
-let launch max_deep not_recursice uris =
+let prepare_and_exec max_deep not_recursice uris =
+
+  (* Prepare options *)
   let uris = filter uris in
-  let option_n = if not_recursice then " -n" else "" in
-  let option_d = " -d " ^ (string_of_int max_deep) in
-  let options = option_d ^ option_n ^ option_a in
+  let str_uris = List.map string_of_uri uris in
+  let option_n = if not_recursice then ["-n"] else [] in
+  let option_d = ["-d"; string_of_int max_deep] in
+  let options = option_d @ option_n @ option_a @ str_uris in
+  let command = make_command options in
+
+  (* Generate logfile_name *)
   let first_str_uri = Ptype.string_of_uri (List.hd uris) in
   let uri_file = filename_of_uri first_str_uri in
   let logfile = Conf.Bot.logdir ^ uri_file ^".log" in
-  let redirect = ">> "^ logfile ^" 2>&1" in
-  let str_uris = List.map string_of_uri uris in
-  let concat_uris = String.concat " " str_uris in
-  let cmd = String.concat " " [cd; "&&"; bin; options; concat_uris; redirect] in
-  (* Log launched command *)
-  print_endline cmd;
+
   (* Add uri to list *)
   running_uris := first_str_uri::!running_uris;
-  (* Launch command *)
-  lwt exit_code = Lwt.return (Sys.command cmd) in
+
+  (* Exec command *)
+  lwt status = exec command logfile in
+
   (* Remove uri to list *)
   running_uris := List.filter (string_not_equal first_str_uri) !running_uris;
-  (* Return exit code *)
-  Lwt.return exit_code
+
+  Lwt.return status
 
 let overloaded () =
   List.length !running_uris >= Conf.Bot.max_simultaneous_process
@@ -80,7 +110,7 @@ let run (max_deep, (not_recursice_opt, uris_encoded)) () =
   let uris_decoded = List.map Ptype.uri_decode uris_encoded in
   let first_str_uri = List.hd uris_decoded in
   let uris = List.map Ptype.uri_of_string uris_decoded in
-  let launch () = launch max_deep not_recursice uris in
+  let launch () = prepare_and_exec max_deep not_recursice uris in
   let overloading = overloaded () in
   if (overloading)
   then print_endline ("System overlading, thus not launching on "^ first_str_uri);
