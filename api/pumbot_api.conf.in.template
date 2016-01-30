@@ -27,7 +27,7 @@
          </api>
          <bot>
             <directory>../botapp/</directory>
-            <logdir>~/botlog/</logdir>
+            <logdir>botlog/</logdir>
             <maxsimultaneousprocess>3</maxsimultaneousprocess>
          </bot>
       </eliom>

@@ -32,7 +32,7 @@ let filter uris =
   List.filter aux uris
 
 (* make command settings *)
-let bin = "./"^ Conf.Bot.directory ^"/pum_bot"
+let bin = Conf.Bot.directory ^"/pum_bot"
 let option_a = ["-a"; Conf.Api.host]
 
 let make_command options =
@@ -44,7 +44,7 @@ let print_cmd (bin, command) logfile =
   print_endline with_redirection
 
 (* Static settings for filename_of_uri function *)
-let not_alphanum = Str.regexp "[^a-zA-Z\\d\\s]"
+let not_alphanum = Str.regexp "[^a-zA-Z0-9\\s]"
 let http = Str.regexp "^https?://"
 
 let filename_of_uri str_uri =
@@ -108,13 +108,13 @@ let run (max_deep, (not_recursice_opt, uris_encoded)) () =
     | None -> false
   in
   let uris_decoded = List.map Ptype.uri_decode uris_encoded in
-  let first_str_uri = List.hd uris_decoded in
   let uris = List.map Ptype.uri_of_string uris_decoded in
   let launch () = prepare_and_exec max_deep not_recursice uris in
   let overloading = overloaded () in
-  if (overloading)
-  then print_endline ("System overlading, thus not launching on "^ first_str_uri);
-  if (List.length uris > 0 && not overloading) then Lwt.async launch;
+  if (List.length uris > 0) then (
+    let first_str_uri = List.hd uris_decoded in
+    if (not overloading) then Lwt.async launch
+    else print_endline ("System overlading, thus not launching on "^ first_str_uri));
   let code = if (overloading) then 503 else 200 in
   let json = `Assoc [("code", `Int code)] in
   Lwt.return (Yojson.to_string json, "application/json")
