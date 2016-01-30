@@ -75,7 +75,6 @@ let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
 let prepare_and_exec max_deep not_recursice uris =
 
   (* Prepare options *)
-  let uris = filter uris in
   let str_uris = List.map string_of_uri uris in
   let option_n = if not_recursice then ["-n"] else [] in
   let option_d = ["-d"; string_of_int max_deep] in
@@ -85,7 +84,7 @@ let prepare_and_exec max_deep not_recursice uris =
   (* Generate logfile_name *)
   let first_str_uri = Ptype.string_of_uri (List.hd uris) in
   let uri_file = filename_of_uri first_str_uri in
-  let logfile = Conf.Bot.logdir ^ uri_file ^".log" in
+  let logfile = Conf.Bot.logdir ^ uri_file ^ ".log" in
 
   (* Add uri to list *)
   running_uris := first_str_uri::!running_uris;
@@ -109,10 +108,11 @@ let run (max_deep, (not_recursice_opt, uris_encoded)) () =
   in
   let uris_decoded = List.map Ptype.uri_decode uris_encoded in
   let uris = List.map Ptype.uri_of_string uris_decoded in
-  let launch () = prepare_and_exec max_deep not_recursice uris in
+  let filetred_uris = filter uris in
+  let launch () = prepare_and_exec max_deep not_recursice filetred_uris in
   let overloading = overloaded () in
-  if (List.length uris > 0) then (
-    let first_str_uri = List.hd uris_decoded in
+  if (List.length filetred_uris > 0) then (
+    let first_str_uri = Ptype.string_of_uri (List.hd filetred_uris) in
     if (not overloading) then Lwt.async launch
     else print_endline ("System overlading, thus not launching on "^ first_str_uri));
   let code = if (overloading) then 503 else 200 in
