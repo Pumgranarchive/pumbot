@@ -93,21 +93,28 @@ let insert_links new_links = Link.insert new_links
    Or the limit of iterations
 *)
 let iter switch options queue =
-  let aux old_uris queue (deep, uri) =
-    lwt content, new_links, new_uris = switch uri in
-    lwt old_uris' = insert_content content old_uris in
-    (* let links' = insert_links uri new_links links old_uris' in *)
-    lwt _ = insert_links new_links in
-    let queue' = push_new_uris options (deep + 1) new_uris old_uris' queue in
-    Lwt.return (old_uris', queue')
+  let aux old_uri_list queue (deep, uri) =
+    lwt opt_data = switch uri in
+    match opt_data with
+
+    (* Not any data found - Invalid url *)
+    | None -> Lwt.return (old_uri_list, queue)
+
+    (* Some data have been extracted *)
+    | Some (content, new_links, new_uris) ->
+      lwt uri_list = insert_content content old_uri_list in
+      lwt _ = insert_links new_links in
+      let new_deep = deep + 1 in
+      let new_queue = push_new_uris options new_deep new_uris uri_list queue in
+      Lwt.return (uri_list, new_queue)
   in
   lwt _ = Lwt_magic_queue.fold_left aux options UriMap.empty queue in
   Lwt.return ()
 
-let run (list, options) =
+let run uri_list options =
   let init str = (0, Ptype.uri_of_string str) in
-  let uris = List.map init list in
-  let queue = Magic_queue.from_list uris in
+  let uri_list' = List.map init uri_list in
+  let queue = Magic_queue.from_list uri_list' in
   iter (switch platforms) options queue
 
 (** Initialize the pumgrana api uri *)
@@ -116,9 +123,9 @@ let init options =
 
 let main () =
   let input_list = List.tl (Array.to_list Sys.argv) in
-  let options = ArgParser.get_options input_list in
+  let uri_list, options = ArgParser.get_options input_list in
   let () = init options in
-  try run options
+  try run uri_list options
   with
   | ArgParser.Invalid_Argument
   | ArgParser.Help             -> Lwt.return ()

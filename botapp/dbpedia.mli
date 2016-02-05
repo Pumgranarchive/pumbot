@@ -8,4 +8,4 @@ val is_wikipedia_uri : Ptype.uri -> bool
     @return data getted from dbpedia of the given [uri]
 *)
 val get : Ptype.uri ->
-  (Utils.Content.t * Utils.Link.t list * Utils.Uri.t list) Lwt.t
+  (Utils.Content.t * Utils.Link.t list * Utils.Uri.t list) option Lwt.t

@@ -54,7 +54,7 @@ let wrapper data_of_topic uri =
   let data_tags = Tag.makes data_subjects in
   let tags = youtube_tag::data_tags in
   let content = Content.make uri title summary tags in
-  Lwt.return (content, links, uris)
+  Lwt.return (Some (content, links, uris))
 
 let append_data previous_data new_data =
   let p_uris, p_subjects, p_links = previous_data in
@@ -75,19 +75,19 @@ let search_by_topic topic =
 let talk_about = "Talk about"
 let mentioned_by = "Mentioned by"
 
-let build_wiki_data uris (t1, t2) p_data wiki_data =
+let build_wiki_data uris (t1, t2) previous_data wiki_data =
   let _,wiki_title,_,_,_,wiki_urls = wiki_data in
   let wuris = List.map Ptype.uri_of_string wiki_urls in
   let links = Link.build_inter_link t1 t2 uris wuris in
-  append_data p_data (wuris, [wiki_title], links)
+  append_data previous_data (wuris, [wiki_title], links)
 
 let wiki uri =
-  let data_of_topic p_data topic =
+  let data_of_topic previous_data topic =
     lwt wiki_data = Freebase_http.get_topics topic in
     let tags = talk_about, mentioned_by in
     let data_to_return = match wiki_data with
-    | Some data -> build_wiki_data [uri] tags p_data data
-    | None      -> ([], [], [])
+    | Some data -> build_wiki_data [uri] tags previous_data data
+    | None      -> previous_data
     in
     Lwt.return (data_to_return)
   in
@@ -118,7 +118,7 @@ let discography uri =
     lwt freebase_data = Freebase_http.get_topics topic in
     match freebase_data with
       | Some current_data      -> extract_data previous_data current_data
-      | None                   -> Lwt.return ([], [], [])
+      | None                   -> Lwt.return previous_data
   in
   wrapper data_of_topic uri
 

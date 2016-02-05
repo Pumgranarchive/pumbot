@@ -18,7 +18,7 @@ MLI :=		argParser.mli	\
 		readability.mli	\
 		dbpedia.mli
 
-PACKAGES :=	lwt,cohttp,cohttp.lwt,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,boilerpipe,xtractor,opencalais_http
+PACKAGES :=	lwt,cohttp,cohttp.lwt,pghttp,str,rdf,rdf.lwt,yojson,netstring,urlnorm,ptools,pumgrana_http,bfy,dbpedia,tidy,readability_http,boilerpipe,xtractor,opencalais_http
 
 CMX :=		$(ML:.ml=.cmx)
 CMO :=		$(ML:.ml=.cmo)

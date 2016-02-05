@@ -15,6 +15,15 @@ struct
     with e ->
       close_in_noerr ic;
       raise Not_found
+
+  let readlines name =
+    let ic = open_in name in
+    let rec loop lines =
+      try loop ((input_line ic) :: lines)
+      with End_of_file -> begin close_in ic; List.rev lines end
+    in
+    loop []
+
 end
 
 module Token =
