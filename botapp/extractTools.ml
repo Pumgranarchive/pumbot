@@ -78,6 +78,12 @@ let extract_meta property head =
     Str.replace_first after_content "" (Str.replace_first before_content "" meta)
   with Not_found -> ""                  (* given meta property not found *)
 
+let extract_meta_property name head =
+  extract_meta ("property[ \t]*=[ \t]*[\"'][a-zA-Z0-9]*:?"^ name ^"[\"']") head
+
+let extract_meta_name name head =
+  extract_meta ("name[ \t]*=[ \t]*[\"']"^ name ^"[\"']") head
+
 let clean_html dirty_html =
   let carriage_return = Str.regexp "\n" in
   let multi_space = Str.regexp "[ \t]+" in
@@ -93,9 +99,9 @@ let meta_of_html dirty_html =
   let html = clean_html dirty_html in
   let head = extract_bloc "head" html in
   let page_title = extract_bloc "title" head in
-  let property_title = extract_meta ":?title" head in
-  let page_description = extract_meta "name ?= ?[\"']description" head in
-  let property_description = extract_meta ":?description" head in
+  let property_title = extract_meta_property "title" head in
+  let page_description = extract_meta_name "description" head in
+  let property_description = extract_meta_property "description" head in
 
   let title = choose_best page_title property_title in
   let description = choose_best page_description property_description in
@@ -105,7 +111,7 @@ let meta_of_html dirty_html =
   else None
 
 (* let test_meta () = *)
-(*   let html = String.concat "" (Utils.File.readlines "bbc.html") in *)
+(*   let html = String.concat "" (Utils.File.readlines "youtube.html") in *)
 (*   match meta_of_html html with *)
 (*   | None -> Printf.printf "Nothing found\n" *)
 (*   | Some doc -> *)
