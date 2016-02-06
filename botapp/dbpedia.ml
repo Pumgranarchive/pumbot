@@ -32,7 +32,7 @@ let linker uri data doc =
     let tags = wikipedia_tag::data_tags in
     let content = Content.make uri doc.title doc.summary tags in
 
-    let wuris = ExtractTools.contained_uris_of doc.content in
+    let wuris = ExtractTools.contained_uris_of_html uri doc.content in
     let wlinks = Link.build_inter_link talk_about mentioned_by [uri] wuris in
 
     lwt yuris = Youtube.search doc.title in

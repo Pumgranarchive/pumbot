@@ -12,47 +12,121 @@ let () = Opencalais_http.set_token Token.opencalais
 
 let is_something_else uri = true
 
-let contained_uris_of body =
-  let ink = Str.regexp "#.*" in
-  let cand = Str.regexp "&.*" in
-  let clean uri =
-    Str.global_replace cand ""
-      (Str.global_replace ink "" uri)
-  in
+let wiki_action = Str.regexp "^https?://..\\.wikipedia\\.org/w/index\\.php"
+let img = Str.regexp ".*\\.\\(jpg\\|png\\|svg\\|bmp\\|gif\\)$"
+let not_human_readable = Str.regexp ".*\\.\\(js\\|css\\|ico\\|json\\)$"
+let not_managed = Str.regexp ".*\\.\\(xml\\|pdf\\)$"
+let wiki_category = Str.regexp ".*/wiki/[a-z]*:.*"
+let mailto = Str.regexp ".*mailto:.*"
+let should_be_removed uri =
+  Str.string_partial_match wiki_action uri 0 ||
+  Str.string_match wiki_category uri 0 ||
+  Str.string_match img uri 0 ||
+  Str.string_match not_human_readable uri 0 ||
+  Str.string_match not_managed uri 0 ||
+  Str.string_match mailto uri 0
 
-  let wiki_action = Str.regexp "^https?://..\\.wikipedia\\.org/w/index\\.php" in
-  let img = Str.regexp ".*\\.\\(jpg\\|png\\|svg\\|bmp\\|gif\\)$" in
-  let wiki_file = Str.regexp ".*file:.*" in
-  let wiki_category = Str.regexp ".*category:.*" in
-  let wiki_special = Str.regexp ".*special:.*" in
-  let wiki_help = Str.regexp ".*help:.*" in
-  let should_be_removed uri =
-    Str.string_partial_match wiki_action uri 0 ||
-    Str.string_match wiki_file uri 0 ||
-    Str.string_match wiki_category uri 0 ||
-    Str.string_match wiki_special uri 0 ||
-    Str.string_match wiki_help uri 0 ||
-    Str.string_match img uri 0
+let ink = Str.regexp "#.*"
+let cand = Str.regexp "&.*"
+let before_quote = Str.regexp "^.*[\"']"
+let after_quote = Str.regexp "[\"'].*$"
+let clean_uri href =
+  let uri = Str.replace_first after_quote ""
+    (Str.replace_first before_quote "" href)
   in
+  Str.global_replace cand "" (Str.global_replace ink "" uri)
 
-  let compare s1 s2 = String.compare s1 (String.lowercase s2) == 0 in
+let protocol = Str.regexp "^https?://.*$"
+let double_slash_start = Str.regexp "^//.*$"
+let slash_start = Str.regexp "^/.*$"
+let real_path domain directory url =
+  (* Printf.printf "url: '%s'\n" url; *)
+  let str_match regex = Str.string_match regex url 0 in
+  if str_match protocol then url else                           (* abosulte  *)
+    if str_match double_slash_start then "http:" ^ url else     (* without protocol *)
+      if str_match slash_start then domain ^ url else           (* root *)
+        directory ^ url                                         (* in dir *)
 
-  let uri_expr = Str.regexp "[\"']https?://.*[\"']" in
-  let end_uri = Str.regexp "[\"']" in
-  let rec extract_uri uris pos =
-    try
-      let start_p = Str.search_forward uri_expr body pos in
-      let end_p = Str.search_forward end_uri body (start_p + 1) in
-      let uri = clean (String.sub body (start_p + 1) (end_p - start_p - 1)) in
-      let lower_uri = String.lowercase uri in
-      if (should_be_removed lower_uri || List.exists (compare lower_uri) uris)
-      then extract_uri uris (end_p + 1)
-      else extract_uri (uri::uris) (end_p + 1)
-    with Not_found -> uris
-  in
-  let str_uris = extract_uri [] 0 in
+let compare s1 s2 = String.compare s1 (String.lowercase s2) == 0
+
+let uri_expr = Str.regexp "\\(src\\|href\\|action\\)[ \t]*=[ \t]*[\"'][ \t]*[a-zA-Z0-9\\+&\\@#/%=~_|!:,\\.;\\-\\?]+[ \t]*[\"']"
+let end_uri = Str.regexp "[^=][ \t]*[\"']"
+let rec extract_uri domain directory body uris pos =
+  try
+    let start_p = Str.search_forward uri_expr body pos in
+    let end_p = Str.search_forward end_uri body (start_p + 1) in
+    let length = end_p - start_p + 1 in
+    let uri = clean_uri (String.sub body start_p length) in
+    let real_uri = real_path domain directory uri in
+    let lower_uri = String.lowercase real_uri in
+    if (should_be_removed lower_uri || List.exists (compare lower_uri) uris)
+    then extract_uri domain directory body uris (end_p + 1)
+    else extract_uri domain directory body (real_uri::uris) (end_p + 1)
+  with Not_found -> uris
+
+let file = Str.regexp "[^/]*$"
+let current_directory url =
+  Str.replace_first file "" url
+
+let end_of_protocol = Str.regexp "://"
+let slash = Str.regexp "/"
+let domain_of_uri url =
+  try
+    let start_domain = Str.search_forward end_of_protocol url 0 + 3 in
+    let end_domain = Str.search_forward slash url start_domain in
+    let length = end_domain - start_domain in
+    "http://" ^ String.sub url start_domain length
+  with Not_found -> "http://"
+
+let start_header = Str.regexp "<header id=\"orb-banner\" role=\"banner\">"
+let end_header = Str.regexp "</header>"
+let remove_bbc_head html =
+  try
+    let start_bloc = Str.search_forward start_header html 0 in
+    let end_bloc = Str.search_forward end_header html start_bloc in
+    let length = String.length html - end_bloc in
+    let before = String.sub html 0 start_bloc in
+    let after = String.sub html end_bloc length in
+    before ^ after
+  with Not_found -> html
+
+let start_footer = Str.regexp "<div id=\"orb-footer\"[^>]*>"
+let remove_bbc_footer html =
+  try
+    let start_bloc = Str.search_forward start_footer html 0 in
+    let before = String.sub html 0 start_bloc in
+    before
+  with Not_found -> html
+
+let bbc = Str.regexp "^.*bbc.*$"
+let clean_html domain html =
+  if Str.string_match bbc domain 0 then remove_bbc_footer (remove_bbc_head html)
+  else html
+
+let contained_uris_of_html base_uri dirty_html =
+  let base_str_uri = Ptype.string_of_uri base_uri in
+  let directory = current_directory base_str_uri in
+  let domain = domain_of_uri base_str_uri in
+  let html = clean_html domain dirty_html in
+  let str_uris = extract_uri domain directory html [] 0 in
   let uris = List.rev (List.map Ptype.uri_of_string str_uris) in
-  List.limit 40 uris
+  (* List.limit 40 uris *)
+  uris
+
+
+
+
+let test_uris () =
+  let html = String.concat "" (Utils.File.readlines "youtube.html") in
+  let home_bbc = Ptype.uri_of_string "http://www.bbc.com/" in
+  let bbc = Ptype.uri_of_string "http://www.bbc.com/earth/story/20151030-photography-battle-new-zealand-v-australia" in
+  let youtube = Ptype.uri_of_string "https://www.youtube.com/watch?v=BX2MtlrhSZk" in
+  let wikipedia = Ptype.uri_of_string "https://en.wikipedia.org/wiki/Eternity_II_puzzle" in
+  let uris = contained_uris_of_html wikipedia html in
+  List.iter (fun uri -> print_endline (Ptype.string_of_uri uri)) uris
+
+let _ = test_uris ()
+
 
 (******************************************************************************
 ***************************** Extract html meta *******************************
@@ -110,12 +184,15 @@ let meta_of_html dirty_html =
   then Some { title = title; description = description }
   else None
 
-(* let test_meta () = *)
-(*   let html = String.concat "" (Utils.File.readlines "youtube.html") in *)
-(*   match meta_of_html html with *)
-(*   | None -> Printf.printf "Nothing found\n" *)
-(*   | Some doc -> *)
-(*     Printf.printf "title: '%s'\n" doc.title; *)
-(*     Printf.printf "description: '%s'\n" doc.description *)
+
+
+
+let test_meta () =
+  let html = String.concat "" (Utils.File.readlines "youtube.html") in
+  match meta_of_html html with
+  | None -> Printf.printf "Nothing found\n"
+  | Some doc ->
+    Printf.printf "title: '%s'\n" doc.title;
+    Printf.printf "description: '%s'\n" doc.description
 
 (* let _ = test_meta () *)
