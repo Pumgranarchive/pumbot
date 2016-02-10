@@ -116,16 +116,16 @@ let contained_uris_of_html base_uri dirty_html =
 
 
 
-let test_uris () =
-  let html = String.concat "" (Utils.File.readlines "youtube.html") in
-  let home_bbc = Ptype.uri_of_string "http://www.bbc.com/" in
-  let bbc = Ptype.uri_of_string "http://www.bbc.com/earth/story/20151030-photography-battle-new-zealand-v-australia" in
-  let youtube = Ptype.uri_of_string "https://www.youtube.com/watch?v=BX2MtlrhSZk" in
-  let wikipedia = Ptype.uri_of_string "https://en.wikipedia.org/wiki/Eternity_II_puzzle" in
-  let uris = contained_uris_of_html wikipedia html in
-  List.iter (fun uri -> print_endline (Ptype.string_of_uri uri)) uris
+(* let test_uris () = *)
+(*   let html = String.concat "" (Utils.File.readlines "youtube.html") in *)
+(*   let home_bbc = Ptype.uri_of_string "http://www.bbc.com/" in *)
+(*   let bbc = Ptype.uri_of_string "http://www.bbc.com/earth/story/20151030-photography-battle-new-zealand-v-australia" in *)
+(*   let youtube = Ptype.uri_of_string "https://www.youtube.com/watch?v=BX2MtlrhSZk" in *)
+(*   let wikipedia = Ptype.uri_of_string "https://en.wikipedia.org/wiki/Eternity_II_puzzle" in *)
+(*   let uris = contained_uris_of_html wikipedia html in *)
+(*   List.iter (fun uri -> print_endline (Ptype.string_of_uri uri)) uris *)
 
-let _ = test_uris ()
+(* let _ = test_uris () *)
 
 
 (******************************************************************************
@@ -187,12 +187,12 @@ let meta_of_html dirty_html =
 
 
 
-let test_meta () =
-  let html = String.concat "" (Utils.File.readlines "youtube.html") in
-  match meta_of_html html with
-  | None -> Printf.printf "Nothing found\n"
-  | Some doc ->
-    Printf.printf "title: '%s'\n" doc.title;
-    Printf.printf "description: '%s'\n" doc.description
+(* let test_meta () = *)
+(*   let html = String.concat "" (Utils.File.readlines "youtube.html") in *)
+(*   match meta_of_html html with *)
+(*   | None -> Printf.printf "Nothing found\n" *)
+(*   | Some doc -> *)
+(*     Printf.printf "title: '%s'\n" doc.title; *)
+(*     Printf.printf "description: '%s'\n" doc.description *)
 
 (* let _ = test_meta () *)
