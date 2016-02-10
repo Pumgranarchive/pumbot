@@ -69,13 +69,12 @@ let exec command logfile =
 
 (* Static settings for the prepare_and_exec function *)
 let string_not_equal s1 s2 = String.compare s1 s2 != 0
-let string_of_uri uri = "\"" ^ Ptype.string_of_uri uri ^ "\""
 
 (** Launch the bot on the given uris *)
 let prepare_and_exec max_deep not_recursice uris =
 
   (* Prepare options *)
-  let str_uris = List.map string_of_uri uris in
+  let str_uris = List.map Ptype.string_of_uri uris in
   let option_n = if not_recursice then ["-n"] else [] in
   let option_d = ["-d"; string_of_int max_deep] in
   let options = option_d @ option_n @ option_a @ str_uris in
