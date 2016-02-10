@@ -8,6 +8,7 @@ ML :=		argParser.ml	\
 		pxtractor.ml	\
 		readability.ml 	\
 		dbpedia.ml	\
+		crawler.ml	\
 		main.ml
 
 MLI :=		argParser.mli	\
