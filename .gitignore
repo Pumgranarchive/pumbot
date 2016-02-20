@@ -1,0 +1,16 @@
+# Ocaml
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+*.depend
+
+# Ocsigen
+api/_client
+api/_deps
+api/_server
+api/local
