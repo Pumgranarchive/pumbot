@@ -13,9 +13,9 @@ let () = Opencalais_http.set_token Token.opencalais
 let is_something_else uri = true
 
 let wiki_action = Str.regexp "^https?://..\\.wikipedia\\.org/w/index\\.php"
-let img = Str.regexp ".*\\.\\(jpg\\|png\\|svg\\|bmp\\|gif\\)$"
-let not_human_readable = Str.regexp ".*\\.\\(js\\|css\\|ico\\|json\\)$"
-let not_managed = Str.regexp ".*\\.\\(xml\\|pdf\\)$"
+let img = Str.regexp ".*\\.\\(jpg\\|png\\|svg\\|bmp\\|gif\\|ico\\)\\(\\?.*\\)?$"
+let not_human_readable = Str.regexp ".*\\.\\(js\\|css\\|json\\)\\(\\?.*\\)?$"
+let not_managed = Str.regexp ".*\\.\\(xml\\|pdf\\)\\(\\?.*\\)?$"
 let wiki_category = Str.regexp ".*/wiki/[a-z]*:.*"
 let mailto = Str.regexp ".*mailto:.*"
 let should_be_removed uri =
