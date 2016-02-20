@@ -7,24 +7,29 @@ module Yojson = Yojson.Basic
 module Conf = Conf.Configuration
 
 (** Save past launch uris  *)
-let known_uris = ref []
+let known_uris = Queue.create ()
+let known_size = 100
 
 (** Save current running uris  *)
 let running_uris = ref []
 
 let equal_uri u1 u2 = Ptype.compare_uri u1 u2 == 0
 
+let queue_exists f = Queue.fold (fun exist elm -> exist || f elm) false
+
+let queue_pop q = ignore (Queue.pop q)
+
 (** Add given uris only if there are totaly unkown *)
 let filter uris =
   let aux uri =
 
-    let exists = List.exists (equal_uri uri) !known_uris in
+    let exists = queue_exists (equal_uri uri) known_uris in
 
     (* If unknown, add to the list to not crawl again *)
-    if not exists then known_uris := !known_uris@[uri];
+    if not exists then Queue.push uri known_uris;
 
-    (* Limit the list size to 100 to avoid over flow *)
-    if List.length !known_uris > 100 then known_uris := (List.tl !known_uris);
+    (* Limit the queue size to [known_size] to avoid over flow *)
+    if Queue.length known_uris > known_size then queue_pop known_uris;
 
     not exists
 
