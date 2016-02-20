@@ -28,7 +28,8 @@
          <bot>
             <directory>../botapp/</directory>
             <logdir>botlog/</logdir>
-            <maxsimultaneousprocess>3</maxsimultaneousprocess>
+            <maxprocess>3</maxprocess>
+            <minprocess>1</minprocess>
          </bot>
       </eliom>
     </host>

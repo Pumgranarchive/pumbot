@@ -72,7 +72,8 @@ struct
 
     let directory = Read.string block "directory"
     let logdir = Read.string block "logdir"
-    let max_simultaneous_process = Read.int block "maxsimultaneousprocess"
+    let max_process = Read.int block "maxprocess"
+    let min_process = Read.int block "minprocess"
 
   end
 
