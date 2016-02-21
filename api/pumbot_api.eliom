@@ -7,7 +7,7 @@ module Yojson = Yojson.Basic
 module Conf = Conf.Configuration
 
 (** Waiting list  *)
-let waiting_uris = Queue.create ()
+let waiting_uris = ref []
 let waiting_size = 100
 
 (** Save past launch uris  *)
@@ -40,15 +40,33 @@ let filter uris =
   in
   List.filter aux uris
 
+
+let rec take n new_list ref_list =
+  if (n <= 0) then List.rev new_list
+  else match ref_list with
+  | [] -> raise (Invalid_argument "list too short")
+  | head::tail -> take (n - 1) (head::new_list) tail
+
+let pop_oldest_wainting () =
+  let current_list = !waiting_uris in
+  let length = List.length current_list in
+  let new_list = take (length - 1) [] current_list in
+  waiting_uris := new_list
+
+let push_waiting uri =
+  if (List.length !waiting_uris > waiting_size)
+  then pop_oldest_wainting ();
+  waiting_uris := uri :: !waiting_uris
+
+let take_one_waiting () =
+  let uri = List.hd !waiting_uris in
+  waiting_uris := List.tl !waiting_uris;
+  uri
+
+
 (* make command settings *)
 let bin = Conf.Bot.directory ^"/pum_bot"
 let option_a = ["-a"; Conf.Api.host]
-
-
-let push_waiting uri =
-  if (Queue.length waiting_uris > waiting_size)
-  then Queue.push uri waiting_uris
-
 
 let make_command options =
   (bin, Array.of_list (bin::options))
@@ -110,8 +128,8 @@ let rec prepare_and_exec max_deep not_recursive uris =
   running_uris := List.filter (string_not_equal first_str_uri) !running_uris;
 
   (* Launch one waiting uri if possible *)
-  if Queue.length waiting_uris > 0 && List.length !running_uris < Conf.Bot.min_process
-  then Lwt.async (fun () -> prepare_and_exec max_deep not_recursive [Queue.pop waiting_uris]);
+  if List.length !waiting_uris > 0 && List.length !running_uris < Conf.Bot.min_process
+  then Lwt.async (fun () -> prepare_and_exec max_deep not_recursive [take_one_waiting ()]);
 
   Lwt.return status
 
