@@ -8,11 +8,9 @@ module Conf = Conf.Configuration
 
 (** Waiting list  *)
 let waiting_uris = ref []
-let waiting_size = 100
 
 (** Save past launch uris  *)
 let known_uris = Queue.create ()
-let known_size = 300
 
 (** Save current running uris  *)
 let running_uris = ref []
@@ -32,8 +30,8 @@ let filter uris =
     (* If unknown, add to the list to not crawl again *)
     if not exists then Queue.push uri known_uris;
 
-    (* Limit the queue size to [known_size] to avoid over flow *)
-    if Queue.length known_uris > known_size then queue_pop known_uris;
+    (* Limit the queue size to [Conf.Bot.known_size] to avoid over flow *)
+    if Queue.length known_uris > Conf.Bot.known_size then queue_pop known_uris;
 
     not exists
 
@@ -54,7 +52,7 @@ let pop_oldest_wainting () =
   waiting_uris := new_list
 
 let push_waiting uri =
-  if (List.length !waiting_uris > waiting_size)
+  if (List.length !waiting_uris > Conf.Bot.waiting_size)
   then pop_oldest_wainting ();
   waiting_uris := uri :: !waiting_uris
 

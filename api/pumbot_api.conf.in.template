@@ -30,6 +30,8 @@
             <logdir>botlog/</logdir>
             <maxprocess>3</maxprocess>
             <minprocess>1</minprocess>
+            <waitingsize>100</waitingsize>
+            <knownsize>300</knownsize>
          </bot>
       </eliom>
     </host>

@@ -74,6 +74,8 @@ struct
     let logdir = Read.string block "logdir"
     let max_process = Read.int block "maxprocess"
     let min_process = Read.int block "minprocess"
+    let waiting_size = Read.int block "waitingsize"
+    let known_size = Read.int block "knownsize"
 
   end
 
