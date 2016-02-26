@@ -7,6 +7,7 @@ type document = { title: string; body: string; summary: string; content: string 
 *******************************************************************************)
 
 let document_of_meta html meta =
+  Printf.printf "Meta\n";
   Lwt.return (Some {
     title = meta.ExtractTools.title;
     body = meta.ExtractTools.description;
@@ -14,7 +15,9 @@ let document_of_meta html meta =
     content = html })
 
 let document_of_xtractor html lwt_doc =
+  Printf.printf "No meta, querying xtractor\n";
   lwt doc = lwt_doc in
+  Printf.printf "done\n";
   Lwt.return (Some {
     title = doc.Xtractor.title;
     body = doc.Xtractor.body;
@@ -22,9 +25,12 @@ let document_of_xtractor html lwt_doc =
     content = html })
 
 let data_of uri =
+  print_endline "Querying ...";
   lwt (response, body) = Pghttp.get uri in
+  print_endline "Done querying ...";
   let status = Cohttp_lwt_unix.Response.status response in
   let code = Cohttp.Code.code_of_status status in
+  Printf.printf "Code %d\n" code;
   if (code >= 200 && code < 300) then           (* Good response *)
     lwt html = Cohttp_lwt_body.to_string body in
     match ExtractTools.meta_of_html html with
