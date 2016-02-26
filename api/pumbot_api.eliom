@@ -84,7 +84,7 @@ let filename_of_uri str_uri =
 
 (* Exec settings *)
 let open_log_flag = Unix.([O_WRONLY; O_APPEND; O_CREAT])
-let log_permition = 0o440               (* Read for user and group *)
+let log_permition = 0o640 (* Read and write for user and read for group *)
 
 let exec command logfile =
 
