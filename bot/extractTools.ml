@@ -154,23 +154,39 @@ let remove_unexpected_role html =
 ******************************** Bloc Utils ***********************************
 *******************************************************************************)
 
+let extract_bloc name head =
+  let before_bloc = Str.regexp ("^.*<[ \t]*"^ name ^"[^>]*>") in
+  let after_bloc = Str.regexp ("</[ \t]*"^ name ^"[^>]*>.*$") in
+  Str.replace_first before_bloc "" (Str.replace_first after_bloc "" head)
+
 let remove_bloc start_regex end_regex html =
   try
     let start_regex = Str.regexp start_regex in
     let end_regex = Str.regexp end_regex in
     let start_bloc = Str.search_forward start_regex html 0 in
-    let end_bloc = Str.search_forward end_regex html start_bloc in
+    let start_end_bloc = Str.search_forward end_regex html start_bloc in
+    let end_bloc = Str.search_forward end_bloc_regex html start_end_bloc + 1 in
     let length = String.length html - end_bloc in
     let before = String.sub html 0 start_bloc in
     let after = String.sub html end_bloc length in
-    before ^ after
-  with Not_found -> html
+    Some(before ^ after)
+  with Not_found -> None
 
-let remove_header html = remove_bloc "<[ \t]*header" "<[ \t]*/[ \t]*header" html
-let remove_footer html = remove_bloc "<[ \t]*footer" "<[ \t]*/[ \t]*footer" html
-let remove_comment html = remove_bloc "<!\\-\\-" ">" html
+let rec remove_all_bloc start_regex end_regex html =
+  match remove_bloc start_regex end_regex html with
+  | Some(new_html) -> remove_all_bloc start_regex end_regex new_html
+  | None           -> html
 
-let unexpected_balises = [remove_comment; remove_header; remove_footer]
+let remove_comment html = remove_all_bloc "<!\\-\\-" "\\-\\->" html
+let remove_head html = remove_all_bloc "<[ \t]*head" "<[ \t]*/[ \t]*head" html
+let remove_script html = remove_all_bloc "<[ \t]*script" "<[ \t]*/[ \t]*script" html
+let remove_header html = remove_all_bloc "<[ \t]*header" "<[ \t]*/[ \t]*header" html
+let remove_nav html = remove_all_bloc "<[ \t]*nav" "<[ \t]*/[ \t]*nav" html
+let remove_footer html = remove_all_bloc "<[ \t]*footer" "<[ \t]*/[ \t]*footer" html
+
+(* Does not remove head because xtractor may used it *)
+(* Does not remove script because of bug introducting... *)
+let unexpected_balises = [remove_comment; remove_header; remove_nav; remove_footer]
 let clean_unexpected_balise html =
   List.fold_left (fun html f -> f html) html unexpected_balises
 
@@ -217,11 +233,6 @@ let contained_uris_of_html base_uri dirty_html =
 
 type meta = { title: string; description: string }
 
-let extract_bloc name head =
-  let before_bloc = Str.regexp ("^.*<[ \t]*"^ name ^"[^>]*>") in
-  let after_bloc = Str.regexp ("</[ \t]*"^ name ^"[^>]*>.*$") in
-  Str.replace_first before_bloc "" (Str.replace_first after_bloc "" head)
-
 let extract_meta property head =
   let meta_bloc = Str.regexp ("<[ \t]*meta[^<]*"^ property ^"[^>]*>") in
   let end_meta = Str.regexp ">" in
@@ -241,7 +252,7 @@ let extract_meta_property name head =
 let extract_meta_name name head =
   extract_meta ("name[ \t]*=[ \t]*[\"']"^ name ^"[\"']") head
 
-let clean_html dirty_html =
+let compact_html dirty_html =
   let carriage_return = Str.regexp "\n" in
   let multi_space = Str.regexp "[ \t]+" in
   Str.global_replace multi_space " "
@@ -253,7 +264,7 @@ let choose_best page_value property_value =
   if (String.length property_value < min_size) then page_value else property_value
 
 let meta_of_html dirty_html =
-  let html = clean_html dirty_html in
+  let html = compact_html dirty_html in
   let head = extract_bloc "head" html in
   let page_title = extract_bloc "title" head in
   let property_title = extract_meta_property "title" head in

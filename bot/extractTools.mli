@@ -8,6 +8,11 @@ type meta = { title: string; description: string }
   *)
 val is_something_else : Ptype.uri -> bool
 
+(** [clean_html html]
+  * Remove useless balises based of names and roles
+  *)
+val clean_html : string -> string
+
 (** [contained_uris_of_html uri body]
   * @uri is used to resolved relative url
   * @return containted uris found in the given [body]

@@ -14,9 +14,7 @@ let document_of_meta html meta =
     summary = meta.ExtractTools.description;
     content = html })
 
-let document_of_xtractor html lwt_doc =
-  Printf.printf "No meta, querying xtractor\n";
-  lwt doc = lwt_doc in
+let document_of_xtractor html doc =
   Printf.printf "done\n";
   Lwt.return (Some {
     title = doc.Xtractor.title;
@@ -35,7 +33,10 @@ let data_of uri =
     lwt html = Cohttp_lwt_body.to_string body in
     match ExtractTools.meta_of_html html with
     | Some meta -> document_of_meta html meta
-    | None      -> document_of_xtractor html (Xtractor.xtractor uri html)
+    | None      ->
+      Printf.printf "No meta, querying xtractor\n";
+      lwt doc = Xtractor.xtractor uri (ExtractTools.clean_html html) in
+      document_of_xtractor html doc
   else                                          (* An error occured *)
     Lwt.return None
 
