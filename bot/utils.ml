@@ -14,6 +14,7 @@ struct
       line
     with e ->
       close_in_noerr ic;
+      print_endline (name ^" : file is empty");
       raise Not_found
 
   let readlines name =
@@ -28,7 +29,6 @@ end
 
 module Token =
 struct
-
   let readability = File.first_line_of "readability.token"
   let opencalais = File.first_line_of "opencalais.token"
   let youtube = File.first_line_of "youtube.token"
