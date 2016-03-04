@@ -54,6 +54,18 @@ struct
 
 end
 
+module Option =
+struct
+
+  let join concat o1 o2 =
+    match (o1, o2) with
+    | Some(v1), Some(v2) -> Some(concat v1 v2)
+    | Some(v1), None     -> Some(v1)
+    | None, Some(v2)     -> Some(v2)
+    | None, None         -> None
+
+end
+
 module List =
 struct
 
