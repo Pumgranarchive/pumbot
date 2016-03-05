@@ -178,6 +178,7 @@ let rec remove_all_bloc start_regex end_regex html =
   | None           -> html
 
 let remove_comment html = remove_all_bloc "<!\\-\\-" "\\-\\->" html
+let remove_cdata html = remove_all_bloc "<!\\[CDATA\\[" "\\]\\]>" html
 let remove_head html = remove_all_bloc "<[ \t]*head" "<[ \t]*/[ \t]*head" html
 let remove_script html = remove_all_bloc "<[ \t]*script" "<[ \t]*/[ \t]*script" html
 let remove_header html = remove_all_bloc "<[ \t]*header" "<[ \t]*/[ \t]*header" html
@@ -186,7 +187,8 @@ let remove_footer html = remove_all_bloc "<[ \t]*footer" "<[ \t]*/[ \t]*footer" 
 
 (* Does not remove head because xtractor may used it *)
 (* Does not remove script because of bug introducting... *)
-let unexpected_balises = [remove_comment; remove_header; remove_nav; remove_footer]
+let unexpected_balises = [remove_comment; remove_cdata;
+                          remove_header; remove_nav; remove_footer]
 let clean_unexpected_balise html =
   List.fold_left (fun html f -> f html) html unexpected_balises
 
