@@ -23,7 +23,7 @@ let get_data uri =
   let summary = Yojson.Util.(to_string (member "excerpt" json)) in
   let body = Yojson.Util.(to_string (member "content" json)) in
   (* lwt body' = Tidy.xhtml_of_html body in *)
-  Lwt.return (title, summary, body)
+  Lwt.return (title, summary, ExtractTools.clean_html body)
 
 let talk_about = "Talk about"
 let mentioned_by = "Mentioned by"

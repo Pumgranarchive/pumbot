@@ -15,7 +15,7 @@ let document_of_meta html meta =
     content = html })
 
 let document_of_xtractor html doc =
-  Printf.printf "done\n";
+  print_endline "Done";
   Lwt.return (Some {
     title = doc.Xtractor.title;
     body = doc.Xtractor.body;
@@ -31,12 +31,13 @@ let data_of uri =
   Printf.printf "Code %d\n" code;
   if (code >= 200 && code < 300) then           (* Good response *)
     lwt html = Cohttp_lwt_body.to_string body in
-    match ExtractTools.meta_of_html html with
-    | Some meta -> document_of_meta html meta
+    let clean_html = ExtractTools.clean_html html in
+    match ExtractTools.meta_of_html clean_html with
+    | Some meta -> document_of_meta clean_html meta
     | None      ->
-      Printf.printf "No meta, querying xtractor\n";
-      lwt doc = Xtractor.xtractor uri (ExtractTools.clean_html html) in
-      document_of_xtractor html doc
+      print_endline "No meta, querying xtractor...";
+      lwt doc = Xtractor.xtractor uri clean_html in
+      document_of_xtractor clean_html doc
   else                                          (* An error occured *)
     Lwt.return None
 

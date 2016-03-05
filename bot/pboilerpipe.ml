@@ -17,7 +17,7 @@ let data_of uri =
   print_endline title;
   print_endline content;
   let summary = Str.limit content 100 in
-  Lwt.return (title, summary, content)
+  Lwt.return (title, summary, ExtractTools.clean_html content)
 
 let talk_about = "Talk about"
 let mentioned_by = "Mentioned by"

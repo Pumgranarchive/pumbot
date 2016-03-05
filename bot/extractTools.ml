@@ -208,11 +208,10 @@ let clean_html html =
 ***************************** Contained Uris **********************************
 *******************************************************************************)
 
-let contained_uris_of_html base_uri dirty_html =
+let contained_uris_of_html base_uri html =
   let base_str_uri = Ptype.string_of_uri base_uri in
   let directory = current_directory base_str_uri in
   let domain = domain_of_uri base_str_uri in
-  let html = clean_html dirty_html in
   let str_uris = extract_uri domain directory html [] 0 in
   let uris = List.rev (List.map Ptype.uri_of_string str_uris) in
   List.limit 40 uris
