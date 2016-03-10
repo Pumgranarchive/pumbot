@@ -217,7 +217,7 @@ let contained_uris_of_html base_uri html =
   List.limit 40 uris
 
 (* let test_uris () = *)
-(*   let html = String.concat "" (Utils.File.readlines "bbc.html") in *)
+(*   let html = clean_html (String.concat "" (Utils.File.readlines "bbc.html")) in *)
 (*   let home_bbc = Ptype.uri_of_string "http://www.bbc.com/" in *)
 (*   let bbc = Ptype.uri_of_string "http://www.bbc.com/earth/story/20151030-photography-battle-new-zealand-v-australia" in *)
 (*   let youtube = Ptype.uri_of_string "https://www.youtube.com/watch?v=BX2MtlrhSZk" in *)

@@ -78,7 +78,8 @@ let linker uri doc =
 
 
 let get uri =
-  print_endline "Xtractor";
+  let str_uri = Ptype.string_of_uri uri in
+  print_endline ("Xtractor "^ str_uri);
   lwt opt_doc = data_of uri in
   match opt_doc with
   | None     -> Lwt.return None
