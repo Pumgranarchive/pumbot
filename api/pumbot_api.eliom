@@ -80,7 +80,10 @@ let http = Str.regexp "^https?://"
 
 let filename_of_uri str_uri =
   let without_protocol = Str.global_replace http "" str_uri in
-  Str.global_replace not_alphanum "_" without_protocol
+  let alphanum = Str.global_replace not_alphanum "_" without_protocol in
+  (* The real limit is 255, but limit to 200 for logdir path and file extension *)
+  if (String.length alphanum <= 200) then alphanum
+  else String.sub alphanum 0 200
 
 (* Exec settings *)
 let open_log_flag = Unix.([O_WRONLY; O_APPEND; O_CREAT])
